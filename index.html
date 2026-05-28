@@ -17,14 +17,14 @@
             padding: 0; 
             user-select: none; 
             -webkit-user-select: none;
-            touch-action: manipulation;
+            touch-action: manipulation; /* Optimizes mobile taps and prevents zoom double-taps */
         }
         
         html, body {
             width: 100%;
             height: 100%;
-            overflow: hidden;
-            position: fixed;
+            overflow: hidden; /* Stops any web-page scrolling or sliding bounce */
+            position: fixed; /* Extra reinforcement to lock viewport on mobile devices */
         }
 
         body { 
@@ -37,6 +37,7 @@
             padding: 24px;
         }
         
+        /* Tab & Large Screen Friendly Arena Layout */
         .game-arena { 
             width: 100%;
             max-width: 460px; 
@@ -51,12 +52,15 @@
             position: relative;
         }
 
+        /* Screen States Control */
         .screen-container { display: none; }
         .screen-container.active { display: block; }
 
+        /* Start Screen Layout Elements */
         .start-title { font-size: 38px; font-weight: 800; margin-bottom: 12px; color: #ffffff; }
         .start-desc { font-size: 14px; color: #9da3ae; margin-bottom: 35px; }
 
+        /* HUD Dashboard */
         .hud-display { 
             display: flex; 
             justify-content: space-between; 
@@ -76,36 +80,39 @@
             color: #9da3ae;
         }
         .hud-chip div { font-size: 18px; margin-top: 4px; font-weight: 800; }
-        #level { color: #38bdf8; }
+        #level { color: #e2e8f0; }
         #score { color: #e2e8f0; }
         #timer { color: #ff6b6b; text-shadow: 0 0 10px rgba(255, 107, 107, 0.2); }
 
+        /* Formula Window Display */
         .formula-window {
             background: rgba(0, 0, 0, 0.15);
-            padding: 45px 15px;
+            padding: 30px 15px;
             margin-bottom: 40px;
-            border-radius: 24px;
+            border-radius: 18px;
             border: 1px solid rgba(255, 255, 255, 0.03);
         }
         .equation { 
-            font-size: 64px; 
+            font-size: 52px; 
             font-weight: 800; 
             color: #ffffff; 
             letter-spacing: -0.5px;
         }
 
+        /* Action Grid */
         .options-layout { 
             display: grid; 
             grid-template-columns: 1fr 1fr; 
             gap: 20px; 
         }
         
+        /* Sleek Matte Grey Action Buttons */
         .btn-core { 
             background: linear-gradient(135deg, #3a3f44 0%, #2d3135 100%); 
             color: #ffffff; 
             border: 1px solid rgba(255, 255, 255, 0.08); 
             padding: 26px 14px; 
-            font-size: 32px; 
+            font-size: 28px; 
             font-weight: 700; 
             border-radius: 18px; 
             cursor: pointer; 
@@ -118,6 +125,7 @@
             background: #25282b;
         }
 
+        /* Big App Level Control Start Button */
         .btn-start {
             background: linear-gradient(135deg, #47a86e 0%, #3b8e5c 100%);
             color: #ffffff;
@@ -133,8 +141,10 @@
         }
         .btn-start:active {
             transform: scale(0.96);
+            background: #3b8e5c;
         }
         
+        /* Response Status Overrides */
         .btn-core.state-correct { 
             background: linear-gradient(135deg, #47a86e 0%, #3b8e5c 100%) !important; 
             border-color: #52c481 !important;
@@ -147,6 +157,7 @@
             animation: impactShake 0.25s linear;
         }
 
+        /* Burst Animation Particles */
         .fx-particle {
             position: absolute;
             background: #52c481;
@@ -202,40 +213,22 @@
     let currentLvl = 1; let pointTotal = 0; let clocksLeft = 15; let rightAnswer = 0; let activeClock;
     
     function launchGameLoop() {
+        // Toggle view containers instantly
         document.getElementById("welcome-view").classList.remove("active");
         document.getElementById("play-view").classList.add("active");
         triggerMatch();
     }
 
-    function triggerMatch() { 
-        pointTotal = 0; 
-        clocksLeft = 15; 
-        document.getElementById("score").innerText = `0/10`; 
-        document.getElementById("timer").innerText = clocksLeft;
-        queueNextFormula(); 
-        clearInterval(activeClock); 
-        activeClock = setInterval(tickDown, 1000); 
-    }
+    function triggerMatch() { pointTotal = 0; clocksLeft = 15; document.getElementById("score").innerText = `0/10`; queueNextFormula(); clearInterval(activeClock); activeClock = setInterval(tickDown, 1000); }
     
-    function tickDown() { 
-        clocksLeft--; 
-        document.getElementById("timer").innerText = clocksLeft; 
-        if (clocksLeft <= 0) { 
-            clearInterval(activeClock); 
-            alert("💥 Time Expired! Returning to level 1."); 
-            currentLvl = 1; 
-            document.getElementById("level").innerText = currentLvl; 
-            document.getElementById("play-view").classList.remove("active"); 
-            document.getElementById("welcome-view").classList.add("active"); 
-        } 
-    }
+    function tickDown() { clocksLeft--; document.getElementById("timer").innerText = clocksLeft; if (clocksLeft <= 0) { clearInterval(activeClock); alert("💥 Time Expired! Returning to level 1."); currentLvl = 1; document.getElementById("level").innerText = currentLvl; document.getElementById("play-view").classList.remove("active"); document.getElementById("welcome-view").classList.add("active"); } }
     
     function makeRandInt(low, high) { return Math.floor(Math.random() * (high - low + 1)) + low; }
     
     function queueNextFormula() {
         let textStr = "";
         
-        // 1000+ Scalable Level Generator
+        // UPGRADED: 1000+ Infinite Level Logic Formula Module Generators
         if (currentLvl === 1) {
             let numA = makeRandInt(5, 20), numB = makeRandInt(1, 10);
             let sign = Math.random() > 0.5 ? '+' : '-';
@@ -247,7 +240,7 @@
             let numA = makeRandInt(2, 5), numB = makeRandInt(10, 20), numC = makeRandInt(2, 5);
             let targetDiv = numB - (numB % numC); textStr = `${numA} * (${targetDiv} / ${numC})`; rightAnswer = eval(textStr); textStr = `${numA} × (${targetDiv} ÷ ${numC})`;
         } else {
-            // Infinite Scaling Rules for levels up to 1000+
+            // Level 4 to 1000+ Generator: Handles scalable complex challenges based on current tier level
             let scalar = Math.floor(currentLvl / 2);
             let numA = makeRandInt(5 + scalar, 25 + scalar);
             let numB = makeRandInt(5 + scalar, 20 + scalar);
