@@ -2,160 +2,202 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
-    <title>Speed Maths</title>
+    <title>Speed Maths Pro</title>
     
     <link rel="icon" type="image/png" href="https://images.gemini.googleusercontent.com/proxy/b_S3Zl_mC8CqBf048X07HofgNisxR0e6V8D5K4kUj0j-I6MhK3WreF0o-1u4-0-Z_5cM_u7R0-Y=w1000-h1000">
     <link rel="apple-touch-icon" href="https://images.gemini.googleusercontent.com/proxy/b_S3Zl_mC8CqBf048X07HofgNisxR0e6V8D5K4kUj0j-I6MhK3WreF0o-1u4-0-Z_5cM_u7R0-Y=w1000-h1000">
     
     <style>
-        * { 
-            box-sizing: border-box; 
-            margin: 0; 
-            padding: 0; 
-            user-select: none; 
-            -webkit-user-select: none;
-            touch-action: manipulation;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
         
-        html, body {
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            position: fixed;
-        }
-
         body { 
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
-            background: linear-gradient(135deg, #1e2022 0%, #121314 100%); 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            background: radial-gradient(circle at center, #1e222b 0%, #0f1115 100%); 
             color: #f5f5f7; 
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 24px;
+            min-height: 100vh;
+            padding: 20px;
+            overflow: hidden;
         }
         
+        /* Main Premium Game Card Frame */
         .game-arena { 
             width: 100%;
-            max-width: 460px; 
-            background: rgba(35, 38, 41, 0.9); 
-            padding: 40px 32px; 
-            border-radius: 28px; 
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 24px 64px rgba(0, 0, 0, 0.7), 
-                        0 0 40px rgba(0, 0, 0, 0.3); 
-            backdrop-filter: blur(20px);
+            max-width: 420px; 
+            background: rgba(30, 33, 40, 0.75); 
+            padding: 35px 28px; 
+            border-radius: 32px; 
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            box-shadow: 0 30px 70px rgba(0, 0, 0, 0.8), 
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1); 
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
             text-align: center;
             position: relative;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .screen-container { display: none; }
-        .screen-container.active { display: block; }
+        /* Screens Manager Layout */
+        .screen { display: none; width: 100%; height: 100%; }
+        .screen.active { display: block; animation: fadeIn 0.4s ease-out; }
 
-        .start-title { font-size: 38px; font-weight: 800; margin-bottom: 12px; color: #ffffff; }
-        .start-desc { font-size: 14px; color: #9da3ae; margin-bottom: 35px; }
+        /* Start App Logo Graphics */
+        .app-logo {
+            width: 90px;
+            height: 90px;
+            margin: 10px auto 25px;
+            background: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
+            border-radius: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 42px;
+            font-weight: 800;
+            color: #0f1115;
+            box-shadow: 0 15px 30px rgba(56, 189, 248, 0.3);
+        }
 
+        .welcome-title { font-size: 28px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 8px; background: linear-gradient(180deg, #ffffff 0%, #cbd5e1 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .welcome-subtitle { font-size: 14px; color: #94a3b8; margin-bottom: 35px; }
+
+        /* HUD Dashboard Panel */
         .hud-display { 
             display: flex; 
             justify-content: space-between; 
-            gap: 14px;
-            margin-bottom: 40px; 
+            gap: 12px;
+            margin-bottom: 30px; 
         }
         .hud-chip {
             flex: 1;
-            background: #2d3135;
-            padding: 12px 8px;
-            border-radius: 14px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            font-size: 11px;
+            background: rgba(0, 0, 0, 0.25);
+            padding: 12px 6px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            font-size: 10px;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 1px;
-            color: #9da3ae;
+            color: #94a3b8;
         }
-        .hud-chip div { font-size: 18px; margin-top: 4px; font-weight: 800; }
+        .hud-chip div { font-size: 20px; margin-top: 4px; font-weight: 800; letter-spacing: -0.5px; }
         #level { color: #38bdf8; }
-        #score { color: #e2e8f0; }
-        #timer { color: #ff6b6b; text-shadow: 0 0 10px rgba(255, 107, 107, 0.2); }
+        #score { color: #f8fafc; }
+        #timer { color: #ef4444; text-shadow: 0 0 12px rgba(239, 68, 68, 0.4); }
 
+        /* Premium Formula View Window */
         .formula-window {
-            background: rgba(0, 0, 0, 0.15);
-            padding: 45px 15px;
-            margin-bottom: 40px;
+            background: linear-gradient(180deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.35) 100%);
+            padding: 40px 15px;
+            margin-bottom: 30px;
             border-radius: 24px;
-            border: 1px solid rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.02);
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.5);
         }
         .equation { 
-            font-size: 64px; 
+            font-size: 58px; 
             font-weight: 800; 
             color: #ffffff; 
-            letter-spacing: -0.5px;
+            letter-spacing: -1px;
         }
 
+        /* Responsive Action Grid Layout */
         .options-layout { 
             display: grid; 
             grid-template-columns: 1fr 1fr; 
-            gap: 20px; 
+            gap: 16px; 
         }
         
+        /* Custom Native Premium Core Action Buttons */
         .btn-core { 
-            background: linear-gradient(135deg, #3a3f44 0%, #2d3135 100%); 
+            background: linear-gradient(135deg, #2e333d 0%, #20242b 100%); 
             color: #ffffff; 
-            border: 1px solid rgba(255, 255, 255, 0.08); 
-            padding: 26px 14px; 
-            font-size: 32px; 
+            border: 1px solid rgba(255, 255, 255, 0.06); 
+            padding: 24px 12px; 
+            font-size: 30px; 
             font-weight: 700; 
-            border-radius: 18px; 
+            border-radius: 20px; 
             cursor: pointer; 
             position: relative;
-            transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+            outline: none;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.05);
         }
         .btn-core:active { 
-            transform: scale(0.94); 
-            background: #25282b;
+            transform: scale(0.95); 
+            background: #181b21;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6);
         }
 
-        .btn-start {
-            background: linear-gradient(135deg, #47a86e 0%, #3b8e5c 100%);
+        /* Native App Menu Controls styling */
+        .btn-action {
+            background: linear-gradient(135deg, #38bdf8 0%, #2563eb 100%);
             color: #ffffff;
-            border: 1px solid #52c481;
-            padding: 22px 30px;
-            font-size: 22px;
-            font-weight: 800;
-            border-radius: 18px;
+            border: none;
+            padding: 18px 32px;
+            font-size: 16px;
+            font-weight: 700;
+            border-radius: 20px;
             cursor: pointer;
             width: 100%;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+            letter-spacing: 0.5px;
+            box-shadow: 0 10px 25px rgba(37, 99, 235, 0.3);
             transition: all 0.2s;
         }
-        .btn-start:active {
+        .btn-action:active {
             transform: scale(0.96);
+            opacity: 0.9;
         }
         
+        /* Response Action Status Color Filters Override Styles */
         .btn-core.state-correct { 
-            background: linear-gradient(135deg, #47a86e 0%, #3b8e5c 100%) !important; 
-            border-color: #52c481 !important;
-            box-shadow: 0 0 20px rgba(71, 168, 110, 0.3) !important;
+            background: linear-gradient(135deg, #10b981 0%, #047857 100%) !important; 
+            border-color: #34d399 !important;
+            box-shadow: 0 0 25px rgba(16, 185, 129, 0.5) !important;
         }
         .btn-core.state-wrong { 
-            background: linear-gradient(135deg, #cd4b4b 0%, #b33939 100%) !important; 
-            border-color: #e65c5c !important;
-            box-shadow: 0 0 20px rgba(205, 75, 75, 0.3) !important;
+            background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%) !important; 
+            border-color: #f87171 !important;
+            box-shadow: 0 0 25px rgba(239, 68, 68, 0.5) !important;
             animation: impactShake 0.25s linear;
         }
 
+        /* Screen Embedded App Popup Alert Modals Layout */
+        .modal-overlay {
+            display: none;
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 17, 21, 0.95);
+            border-radius: 32px;
+            z-index: 10;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 30px;
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-icon { font-size: 54px; margin-bottom: 15px; }
+        .modal-title { font-size: 26px; font-weight: 800; margin-bottom: 10px; color: #fff; }
+        .modal-desc { font-size: 15px; color: #94a3b8; margin-bottom: 30px; line-height: 1.5; }
+
+        /* Burst Animation Particles Elements layout structures */
         .fx-particle {
             position: absolute;
-            background: #52c481;
+            background: #34d399;
             border-radius: 50%;
             pointer-events: none;
             opacity: 1;
-            animation: scatter 0.5s ease-out forwards;
+            animation: scatter 0.5s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+            z-index: 5;
         }
 
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
         @keyframes impactShake {
             0%, 100% { transform: translateX(0); }
             20% { transform: translateX(-8px); }
@@ -172,13 +214,14 @@
 
 <div class="game-arena" id="arena">
     
-    <div id="welcome-view" class="screen-container active">
-        <div class="start-title">Speed Maths</div>
-        <div class="start-desc">Test your math speed calculation processing power.</div>
-        <button class="btn-start" onclick="launchGameLoop()">START GAME</button>
+    <div id="start-screen" class="screen active">
+        <div class="app-logo">∑</div>
+        <h1 class="welcome-title">Speed Maths Pro</h1>
+        <p class="welcome-subtitle">Train your brain. Run the endless operations.</p>
+        <button class="btn-action" onclick="changeScreen('game-screen'); triggerMatch();">START TRAINING</button>
     </div>
 
-    <div id="play-view" class="screen-container">
+    <div id="game-screen" class="screen">
         <div class="hud-display">
             <div class="hud-chip">Level <div id="level">1</div></div>
             <div class="hud-chip">Score <div id="score">0/10</div></div>
@@ -196,15 +239,36 @@
             <button class="btn-core" onclick="evaluateSelection(this)">-</button>
         </div>
     </div>
+
+    <div id="alert-modal" class="modal-overlay">
+        <div id="modal-icon" class="modal-icon">🎉</div>
+        <div id="modal-title" class="modal-title">Level Up!</div>
+        <div id="modal-desc" class="modal-desc">Description text logic</div>
+        <button id="modal-btn" class="btn-action" onclick="closeAppModal()">CONTINUE</button>
+    </div>
 </div>
 
 <script>
     let currentLvl = 1; let pointTotal = 0; let clocksLeft = 15; let rightAnswer = 0; let activeClock;
+    let modalCallback = null;
     
-    function launchGameLoop() {
-        document.getElementById("welcome-view").classList.remove("active");
-        document.getElementById("play-view").classList.add("active");
-        triggerMatch();
+    function changeScreen(screenId) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
+    }
+
+    function showAppModal(icon, title, desc, buttonText, callback) {
+        document.getElementById("modal-icon").innerText = icon;
+        document.getElementById("modal-title").innerText = title;
+        document.getElementById("modal-desc").innerText = desc;
+        document.getElementById("modal-btn").innerText = buttonText;
+        modalCallback = callback;
+        document.getElementById("alert-modal").classList.add("active");
+    }
+
+    function closeAppModal() {
+        document.getElementById("alert-modal").classList.remove("active");
+        if (modalCallback) { modalCallback(); }
     }
 
     function triggerMatch() { 
@@ -222,11 +286,11 @@
         document.getElementById("timer").innerText = clocksLeft; 
         if (clocksLeft <= 0) { 
             clearInterval(activeClock); 
-            alert("💥 Time Expired! Returning to level 1."); 
             currentLvl = 1; 
             document.getElementById("level").innerText = currentLvl; 
-            document.getElementById("play-view").classList.remove("active"); 
-            document.getElementById("welcome-view").classList.add("active"); 
+            showAppModal("💥", "Time Expired!", "Your concentration broke down. Let's head back to stage level 1 and try fresh.", "TRY AGAIN", function() {
+                triggerMatch();
+            });
         } 
     }
     
@@ -234,8 +298,6 @@
     
     function queueNextFormula() {
         let textStr = "";
-        
-        // 1000+ Scalable Level Generator
         if (currentLvl === 1) {
             let numA = makeRandInt(5, 20), numB = makeRandInt(1, 10);
             let sign = Math.random() > 0.5 ? '+' : '-';
@@ -243,16 +305,9 @@
         } else if (currentLvl === 2) {
             let numA = makeRandInt(2, 6), numB = makeRandInt(2, 5), numC = makeRandInt(1, 10);
             textStr = `${numA} * ${numB} + ${numC}`; rightAnswer = eval(textStr); textStr = textStr.replace('*', '×');
-        } else if (currentLvl === 3) {
+        } else {
             let numA = makeRandInt(2, 5), numB = makeRandInt(10, 20), numC = makeRandInt(2, 5);
             let targetDiv = numB - (numB % numC); textStr = `${numA} * (${targetDiv} / ${numC})`; rightAnswer = eval(textStr); textStr = `${numA} × (${targetDiv} ÷ ${numC})`;
-        } else {
-            // Infinite Scaling Rules for levels up to 1000+
-            let scalar = Math.floor(currentLvl / 2);
-            let numA = makeRandInt(5 + scalar, 25 + scalar);
-            let numB = makeRandInt(5 + scalar, 20 + scalar);
-            let sign = Math.random() > 0.5 ? '+' : '-';
-            textStr = `${numA} ${sign} ${numB}`; rightAnswer = eval(textStr);
         }
         document.getElementById("equation").innerText = textStr; mapToButtons();
     }
@@ -266,18 +321,19 @@
     }
     
     function burstFx(xPos, yPos) {
-        for (let i = 0; i < 12; i++) {
+        for (let i = 0; i < 14; i++) {
             const p = document.createElement('div');
             p.classList.add('fx-particle');
             p.style.left = xPos + 'px'; p.style.top = yPos + 'px';
             const size = makeRandInt(6, 12); p.style.width = size + 'px'; p.style.height = size + 'px';
-            p.style.setProperty('--x', makeRandInt(-90, 90) + 'px'); p.style.setProperty('--y', makeRandInt(-90, 90) + 'px');
+            p.style.setProperty('--x', makeRandInt(-100, 100) + 'px'); p.style.setProperty('--y', makeRandInt(-100, 100) + 'px');
             document.body.appendChild(p);
             setTimeout(() => p.remove(), 500);
         }
     }
     
     function evaluateSelection(clickedBtn) {
+        if (clocksLeft <= 0 || document.getElementById("alert-modal").classList.contains("active")) return;
         let inputVal = parseInt(clickedBtn.innerText);
         if (inputVal === rightAnswer) {
             clickedBtn.classList.add("state-correct");
@@ -288,16 +344,28 @@
                 clickedBtn.classList.remove("state-correct");
                 pointTotal++; clocksLeft += 4; document.getElementById("score").innerText = `${pointTotal}/10`;
                 if (pointTotal >= 10) { 
+                    clearInterval(activeClock);
                     currentLvl++; 
                     document.getElementById("level").innerText = currentLvl; 
-                    alert(`🎉 Level Up! Advancing to Stage ${currentLvl}`); 
-                    triggerMatch(); 
+                    showAppModal("🎉", "Level Up!", `Outstanding accuracy. Prepare yourself for advanced Stage Level ${currentLvl}!`, "ENTER NEXT STAGE", function() {
+                        triggerMatch();
+                    });
                 } else { queueNextFormula(); }
             }, 250);
         } else { 
-            clocksLeft -= 5; document.getElementById("timer").innerText = clocksLeft; 
+            clocksLeft -= 5; 
+            if (clocksLeft < 0) clocksLeft = 0;
+            document.getElementById("timer").innerText = clocksLeft; 
             clickedBtn.classList.add("state-wrong"); 
             setTimeout(() => clickedBtn.classList.remove("state-wrong"), 250); 
+            if (clocksLeft === 0) {
+                clearInterval(activeClock);
+                currentLvl = 1;
+                document.getElementById("level").innerText = currentLvl;
+                showAppModal("💥", "Time Expired!", "Your concentration broke down. Let's head back to stage level 1 and try fresh.", "TRY AGAIN", function() {
+                    triggerMatch();
+                });
+            }
         }
     }
 </script>
