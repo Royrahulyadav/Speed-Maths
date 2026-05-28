@@ -3,226 +3,95 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Speed Maths</title>
-    
-    <!-- Embedded Custom Game Icon Link -->
-    <link rel="icon" type="image/png" href="https://images.gemini.googleusercontent.com/proxy/b_S3Zl_mC8CqBf048X07HofgNisxR0e6V8D5K4kUj0j-I6MhK3WreF0o-1u4-0-Z_5cM_u7R0-Y=w1000-h1000">
-    <link rel="apple-touch-icon" href="https://images.gemini.googleusercontent.com/proxy/b_S3Zl_mC8CqBf048X07HofgNisxR0e6V8D5K4kUj0j-I6MhK3WreF0o-1u4-0-Z_5cM_u7R0-Y=w1000-h1000">
-    
+    <title>Speed-Maths App</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
-        body { 
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
-            background: linear-gradient(135deg, #1e2022 0%, #121314 100%); 
-            color: #f5f5f7; 
+        /* Modern App Styling */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            color: white;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
-            padding: 24px;
-            overflow: hidden;
+            height: 100vh;
+            margin: 0;
         }
-        
-        /* Tab & Large Screen Friendly Arena Layout */
-        .game-arena { 
-            width: 100%;
-            max-width: 460px; 
-            background: rgba(35, 38, 41, 0.9); 
-            padding: 40px 32px; 
-            border-radius: 28px; 
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 24px 64px rgba(0, 0, 0, 0.7), 
-                        0 0 40px rgba(0, 0, 0, 0.3); 
-            backdrop-filter: blur(20px);
+
+        #game-container {
+            background: #ffffff10;
+            padding: 2rem;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
             text-align: center;
-            position: relative;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
         }
 
-        /* HUD Dashboard */
-        .hud-display { 
-            display: flex; 
-            justify-content: space-between; 
-            gap: 14px;
-            margin-bottom: 40px; 
-        }
-        .hud-chip {
-            flex: 1;
-            background: #2d3135;
-            padding: 12px 8px;
-            border-radius: 14px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: #9da3ae;
-        }
-        .hud-chip div { font-size: 18px; margin-top: 4px; font-weight: 800; }
-        #level { color: #e2e8f0; }
-        #score { color: #e2e8f0; }
-        #timer { color: #ff6b6b; text-shadow: 0 0 10px rgba(255, 107, 107, 0.2); }
-
-        /* Formula Window Display */
-        .formula-window {
-            background: rgba(0, 0, 0, 0.15);
-            padding: 30px 15px;
-            margin-bottom: 40px;
-            border-radius: 18px;
-            border: 1px solid rgba(255, 255, 255, 0.03);
-        }
-        .equation { 
-            font-size: 52px; 
-            font-weight: 800; 
-            color: #ffffff; 
-            letter-spacing: -0.5px;
+        button {
+            background: #38bdf8;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            color: #0f172a;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.2s, background 0.3s;
         }
 
-        /* Action Grid */
-        .options-layout { 
-            display: grid; 
-            grid-template-columns: 1fr 1fr; 
-            gap: 20px; 
-        }
-        
-        /* Sleek Matte Grey Action Buttons */
-        .btn-core { 
-            background: linear-gradient(135deg, #3a3f44 0%, #2d3135 100%); 
-            color: #ffffff; 
-            border: 1px solid rgba(255, 255, 255, 0.08); 
-            padding: 26px 14px; 
-            font-size: 28px; 
-            font-weight: 700; 
-            border-radius: 18px; 
-            cursor: pointer; 
-            position: relative;
-            transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
-        }
-        .btn-core:active { 
-            transform: scale(0.94); 
-            background: #25282b;
-        }
-        
-        /* Response Status Overrides */
-        .btn-core.state-correct { 
-            background: linear-gradient(135deg, #47a86e 0%, #3b8e5c 100%) !important; 
-            border-color: #52c481 !important;
-            box-shadow: 0 0 20px rgba(71, 168, 110, 0.3) !important;
-        }
-        .btn-core.state-wrong { 
-            background: linear-gradient(135deg, #cd4b4b 0%, #b33939 100%) !important; 
-            border-color: #e65c5c !important;
-            box-shadow: 0 0 20px rgba(205, 75, 75, 0.3) !important;
-            animation: impactShake 0.25s linear;
+        button:hover {
+            background: #7dd3fc;
+            transform: scale(1.05);
         }
 
-        /* Burst Animation Particles */
-        .fx-particle {
-            position: absolute;
-            background: #52c481;
-            border-radius: 50%;
-            pointer-events: none;
-            opacity: 1;
-            animation: scatter 0.5s ease-out forwards;
-        }
-
-        @keyframes impactShake {
-            0%, 100% { transform: translateX(0); }
-            20% { transform: translateX(-8px); }
-            40% { transform: translateX(6px); }
-            60% { transform: translateX(-4px); }
-            80% { transform: translateX(3px); }
-        }
-        @keyframes scatter {
-            to { transform: translate(var(--x), var(--y)) scale(0); opacity: 0; }
-        }
+        #game-ui { display: none; }
     </style>
 </head>
 <body>
 
-<div class="game-arena" id="arena">
-    <div class="hud-display">
-        <div class="hud-chip">Level <div id="level">1</div></div>
-        <div class="hud-chip">Score <div id="score">0/10</div></div>
-        <div class="hud-chip">Time <div id="timer">15</div></div>
+<div id="game-container">
+    <!-- Start Screen -->
+    <div id="start-screen">
+        <h1>Speed-Maths</h1>
+        <p>Test your calculation speed!</p>
+        <button onclick="startGame()">START GAME</button>
     </div>
-    
-    <div class="formula-window">
-        <div class="equation" id="equation">---</div>
-    </div>
-    
-    <div class="options-layout">
-        <button class="btn-core" onclick="evaluateSelection(this)">-</button>
-        <button class="btn-core" onclick="evaluateSelection(this)">-</button>
-        <button class="btn-core" onclick="evaluateSelection(this)">-</button>
-        <button class="btn-core" onclick="evaluateSelection(this)">-</button>
+
+    <!-- Game Screen (Hidden initially) -->
+    <div id="game-ui">
+        <h2 id="question">?</h2>
+        <input type="number" id="answer" placeholder="Your Answer">
+        <button onclick="checkAnswer()">SUBMIT</button>
     </div>
 </div>
 
 <script>
-    let currentLvl = 1; let pointTotal = 0; let clocksLeft = 15; let rightAnswer = 0; let activeClock;
-    
-    function triggerMatch() { pointTotal = 0; clocksLeft = 15; document.getElementById("score").innerText = `0/10`; queueNextFormula(); clearInterval(activeClock); activeClock = setInterval(tickDown, 1000); }
-    
-    function tickDown() { clocksLeft--; document.getElementById("timer").innerText = clocksLeft; if (clocksLeft <= 0) { clearInterval(activeClock); alert("💥 Time Expired! Returning to level 1."); currentLvl = 1; document.getElementById("level").innerText = currentLvl; triggerMatch(); } }
-    
-    function makeRandInt(low, high) { return Math.floor(Math.random() * (high - low + 1)) + low; }
-    
-    function queueNextFormula() {
-        let textStr = "";
-        if (currentLvl === 1) {
-            let numA = makeRandInt(5, 20), numB = makeRandInt(1, 10);
-            let sign = Math.random() > 0.5 ? '+' : '-';
-            textStr = `${numA} ${sign} ${numB}`; rightAnswer = eval(textStr);
-        } else if (currentLvl === 2) {
-            let numA = makeRandInt(2, 6), numB = makeRandInt(2, 5), numC = makeRandInt(1, 10);
-            textStr = `${numA} * ${numB} + ${numC}`; rightAnswer = eval(textStr); textStr = textStr.replace('*', '×');
+    function startGame() {
+        document.getElementById('start-screen').style.display = 'none';
+        document.getElementById('game-ui').style.display = 'block';
+        generateQuestion();
+    }
+
+    function generateQuestion() {
+        // Simple example logic
+        const a = Math.floor(Math.random() * 10) + 1;
+        const b = Math.floor(Math.random() * 10) + 1;
+        document.getElementById('question').innerText = `${a} + ${b} = ?`;
+        window.correctAnswer = a + b;
+    }
+
+    function checkAnswer() {
+        const userAns = document.getElementById('answer').value;
+        if (parseInt(userAns) === window.correctAnswer) {
+            alert("Correct!");
+            generateQuestion();
+            document.getElementById('answer').value = '';
         } else {
-            let numA = makeRandInt(2, 5), numB = makeRandInt(10, 20), numC = makeRandInt(2, 5);
-            let targetDiv = numB - (numB % numC); textStr = `${numA} * (${targetDiv} / ${numC})`; rightAnswer = eval(textStr); textStr = `${numA} × (${targetDiv} ÷ ${numC})`;
-        }
-        document.getElementById("equation").innerText = textStr; mapToButtons();
-    }
-    
-    function mapToButtons() {
-        let targets = document.querySelectorAll(".btn-core"), randomSpot = Math.floor(Math.random() * 4), badPool = [rightAnswer];
-        for (let idx = 0; idx < 4; idx++) {
-            if (idx === randomSpot) { targets[idx].innerText = rightAnswer; } 
-            else { let badSeed; do { badSeed = rightAnswer + makeRandInt(-12, 12); } while (badPool.includes(badSeed) || badSeed < 0); badPool.push(badSeed); targets[idx].innerText = badSeed; }
+            alert("Try again!");
         }
     }
-    
-    function burstFx(xPos, yPos) {
-        for (let i = 0; i < 12; i++) {
-            const p = document.createElement('div');
-            p.classList.add('fx-particle');
-            p.style.left = xPos + 'px'; p.style.top = yPos + 'px';
-            const size = makeRandInt(6, 12); p.style.width = size + 'px'; p.style.height = size + 'px';
-            p.style.setProperty('--x', makeRandInt(-90, 90) + 'px'); p.style.setProperty('--y', makeRandInt(-90, 90) + 'px');
-            document.body.appendChild(p);
-            setTimeout(() => p.remove(), 500);
-        }
-    }
-    
-    function evaluateSelection(clickedBtn) {
-        let inputVal = parseInt(clickedBtn.innerText);
-        if (inputVal === rightAnswer) {
-            clickedBtn.classList.add("state-correct");
-            const rect = clickedBtn.getBoundingClientRect();
-            burstFx(rect.left + rect.width/2, rect.top + rect.height/2);
-            
-            setTimeout(() => {
-                clickedBtn.classList.remove("state-correct");
-                pointTotal++; clocksLeft += 4; document.getElementById("score").innerText = `${pointTotal}/10`;
-                if (pointTotal >= 10) { currentLvl++; document.getElementById("level").innerText = currentLvl; alert(`🎉 Level Up! Advancing to Stage ${currentLvl}`); triggerMatch(); } else { queueNextFormula(); }
-            }, 250);
-        } else { 
-            clocksLeft -= 5; document.getElementById("timer").innerText = clocksLeft; 
-            clickedBtn.classList.add("state-wrong"); 
-            setTimeout(() => clickedBtn.classList.remove("state-wrong"), 250); 
-        }
-    }
-    triggerMatch();
 </script>
+
 </body>
 </html>
