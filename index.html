@@ -6,368 +6,868 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
     <title>Speed Maths Pro</title>
-    
     <link rel="icon" type="image/png" href="https://images.gemini.googleusercontent.com/proxy/b_S3Zl_mC8CqBf048X07HofgNisxR0e6V8D5K4kUj0j-I6MhK3WreF0o-1u4-0-Z_5cM_u7R0-Y=w1000-h1000">
     <link rel="apple-touch-icon" href="https://images.gemini.googleusercontent.com/proxy/b_S3Zl_mC8CqBf048X07HofgNisxR0e6V8D5K4kUj0j-I6MhK3WreF0o-1u4-0-Z_5cM_u7R0-Y=w1000-h1000">
-    
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
-        
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
-            background: radial-gradient(circle at center, #1e222b 0%, #0f1115 100%); 
-            color: #f5f5f7; 
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        :root {
+            --ad-height: 60px;
+            --bg-deep: #0f1115;
+            --bg-mid: #1e222b;
+            --accent: #38bdf8;
+            --accent-end: #2563eb;
+            --text: #f5f5f7;
+            --muted: #94a3b8;
+            --danger: #ef4444;
+            --success: #10b981;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: radial-gradient(circle at center, var(--bg-mid) 0%, var(--bg-deep) 100%);
+            color: var(--text);
+            min-height: 100vh;
+            min-height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 16px 16px calc(var(--ad-height) + 16px);
+            overflow: hidden;
+        }
+
+        #ad-banner-zone {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            height: var(--ad-height);
+            min-height: var(--ad-height);
+            max-height: var(--ad-height);
+            background: rgba(0, 0, 0, 0.45);
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: auto;
+        }
+
+        #ad-banner-zone span {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: rgba(148, 163, 184, 0.5);
+        }
+
+        .app-shell {
+            width: 100%;
+            max-width: 420px;
+            flex: 0 1 auto;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
-            padding: 20px;
-            overflow: hidden;
         }
-        
-        /* Main Premium Game Card Frame */
-        .game-arena { 
+
+        .game-arena {
             width: 100%;
-            max-width: 420px; 
-            background: rgba(30, 33, 40, 0.75); 
-            padding: 35px 28px; 
-            border-radius: 32px; 
+            background: rgba(30, 33, 40, 0.75);
+            padding: 28px 22px 26px;
+            border-radius: 32px;
             border: 1px solid rgba(255, 255, 255, 0.06);
-            box-shadow: 0 30px 70px rgba(0, 0, 0, 0.8), 
-                        inset 0 1px 0 rgba(255, 255, 255, 0.1); 
+            box-shadow: 0 30px 70px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(25px);
             -webkit-backdrop-filter: blur(25px);
             text-align: center;
             position: relative;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
         }
 
-        /* Screens Manager Layout */
-        .screen { display: none; width: 100%; height: 100%; }
-        .screen.active { display: block; animation: fadeIn 0.4s ease-out; }
+        .screen { display: none; width: 100%; }
+        .screen.active { display: block; animation: fadeIn 0.35s ease-out; }
 
-        /* Start App Logo Graphics */
         .app-logo {
-            width: 90px;
-            height: 90px;
-            margin: 10px auto 25px;
-            background: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
-            border-radius: 24px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 42px;
-            font-weight: 800;
-            color: #0f1115;
+            width: 84px; height: 84px; margin: 6px auto 20px;
+            background: linear-gradient(135deg, var(--accent) 0%, #818cf8 100%);
+            border-radius: 22px; display: flex; justify-content: center; align-items: center;
+            font-size: 40px; font-weight: 800; color: var(--bg-deep);
             box-shadow: 0 15px 30px rgba(56, 189, 248, 0.3);
         }
 
-        .welcome-title { font-size: 28px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 8px; background: linear-gradient(180deg, #ffffff 0%, #cbd5e1 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .welcome-subtitle { font-size: 14px; color: #94a3b8; margin-bottom: 35px; }
-
-        /* HUD Dashboard Panel */
-        .hud-display { 
-            display: flex; 
-            justify-content: space-between; 
-            gap: 12px;
-            margin-bottom: 30px; 
+        .welcome-title {
+            font-size: 26px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 6px;
+            background: linear-gradient(180deg, #ffffff 0%, #cbd5e1 100%);
+            -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
         }
+
+        .welcome-subtitle { font-size: 13px; color: var(--muted); margin-bottom: 22px; line-height: 1.45; }
+
+        .stat-row { display: flex; justify-content: center; gap: 10px; margin-bottom: 22px; flex-wrap: wrap; }
+
+        .stat-pill {
+            background: rgba(0, 0, 0, 0.28); border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 14px; padding: 8px 14px; font-size: 11px; font-weight: 700;
+            color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em;
+        }
+
+        .stat-pill strong {
+            display: block; margin-top: 2px; font-size: 17px; color: #f8fafc;
+            letter-spacing: 0; text-transform: none;
+        }
+
+        .btn-action {
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-end) 100%);
+            color: #ffffff; border: none; padding: 16px 24px; font-size: 15px; font-weight: 700;
+            border-radius: 18px; cursor: pointer; width: 100%; letter-spacing: 0.4px;
+            box-shadow: 0 10px 25px rgba(37, 99, 235, 0.3);
+            transition: transform 0.15s ease, opacity 0.15s ease; margin-bottom: 10px;
+        }
+
+        .btn-action:last-child { margin-bottom: 0; }
+        .btn-action.secondary {
+            background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
+        }
+        .btn-action:active { transform: scale(0.97); opacity: 0.92; }
+
+        .game-top-bar {
+            display: flex; align-items: flex-start; justify-content: space-between;
+            gap: 10px; margin-bottom: 14px;
+        }
+
+        .game-top-bar .hud-display { flex: 1; margin-bottom: 0; }
+
+        .btn-pause {
+            flex-shrink: 0; width: 42px; height: 42px; border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.08); background: rgba(0, 0, 0, 0.28);
+            color: #e2e8f0; font-size: 18px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+            transition: transform 0.15s ease, background 0.15s ease, opacity 0.15s ease;
+            margin-top: 2px;
+        }
+
+        .btn-pause:active { transform: scale(0.94); }
+        .btn-pause:disabled { opacity: 0.35; pointer-events: none; }
+
+        .hud-display {
+            display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 18px;
+        }
+
         .hud-chip {
-            flex: 1;
-            background: rgba(0, 0, 0, 0.25);
-            padding: 12px 6px;
-            border-radius: 16px;
-            border: 1px solid rgba(255, 255, 255, 0.03);
-            font-size: 10px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: #94a3b8;
+            background: rgba(0, 0, 0, 0.25); padding: 10px 6px; border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.03); font-size: 9px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted);
         }
-        .hud-chip div { font-size: 20px; margin-top: 4px; font-weight: 800; letter-spacing: -0.5px; }
-        #level { color: #38bdf8; }
-        #score { color: #f8fafc; }
-        #timer { color: #ef4444; text-shadow: 0 0 12px rgba(239, 68, 68, 0.4); }
 
-        /* Premium Formula View Window */
+        .hud-chip div {
+            font-size: 18px; margin-top: 3px; font-weight: 800;
+            letter-spacing: -0.5px; color: #f8fafc;
+        }
+
+        #hud-level { color: var(--accent); }
+        #hud-progress { color: #a5b4fc; }
+
+        .lifelines-row {
+            display: flex; align-items: center; justify-content: center;
+            gap: 6px; margin-bottom: 16px; min-height: 28px;
+        }
+
+        .lifelines-label {
+            font-size: 10px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.1em; color: var(--muted); margin-right: 4px;
+        }
+
+        .heart { font-size: 22px; line-height: 1; transition: transform 0.2s ease, opacity 0.2s ease; }
+        .heart.lost { opacity: 0.22; transform: scale(0.85); filter: grayscale(1); }
+
+        .timer-block { display: flex; flex-direction: column; align-items: center; margin-bottom: 18px; }
+        .timer-ring-wrap { position: relative; width: 72px; height: 72px; }
+        .timer-ring-wrap svg { width: 72px; height: 72px; transform: rotate(-90deg); }
+        .timer-ring-bg { fill: none; stroke: rgba(255, 255, 255, 0.08); stroke-width: 6; }
+        .timer-ring-progress {
+            fill: none; stroke: var(--danger); stroke-width: 6; stroke-linecap: round;
+            stroke-dasharray: 201; stroke-dashoffset: 0; transition: stroke 0.25s ease;
+            filter: drop-shadow(0 0 6px rgba(239, 68, 68, 0.45));
+        }
+        .timer-ring-progress.warn { stroke: #f59e0b; filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.4)); }
+        .timer-ring-progress.safe { stroke: var(--accent); filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.4)); }
+        .timer-ring-progress.frozen { opacity: 0.65; }
+        .timer-value {
+            position: absolute; inset: 0; display: flex; align-items: center;
+            justify-content: center; font-size: 22px; font-weight: 800; color: #fff;
+        }
+
         .formula-window {
             background: linear-gradient(180deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.35) 100%);
-            padding: 40px 15px;
-            margin-bottom: 30px;
-            border-radius: 24px;
+            padding: 28px 12px; margin-bottom: 22px; border-radius: 22px;
             border: 1px solid rgba(255, 255, 255, 0.02);
             box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.5);
-        }
-        .equation { 
-            font-size: 58px; 
-            font-weight: 800; 
-            color: #ffffff; 
-            letter-spacing: -1px;
+            min-height: 96px; display: flex; align-items: center; justify-content: center;
         }
 
-        /* Responsive Action Grid Layout */
-        .options-layout { 
-            display: grid; 
-            grid-template-columns: 1fr 1fr; 
-            gap: 16px; 
-        }
-        
-        /* Custom Native Premium Core Action Buttons */
-        .btn-core { 
-            background: linear-gradient(135deg, #2e333d 0%, #20242b 100%); 
-            color: #ffffff; 
-            border: 1px solid rgba(255, 255, 255, 0.06); 
-            padding: 24px 12px; 
-            font-size: 30px; 
-            font-weight: 700; 
-            border-radius: 20px; 
-            cursor: pointer; 
-            position: relative;
-            outline: none;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4),
-                        inset 0 1px 0 rgba(255, 255, 255, 0.05);
-        }
-        .btn-core:active { 
-            transform: scale(0.95); 
-            background: #181b21;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6);
+        .equation {
+            font-size: clamp(28px, 8vw, 46px); font-weight: 800; color: #ffffff;
+            letter-spacing: -0.5px; line-height: 1.2; word-break: break-word;
         }
 
-        /* Native App Menu Controls styling */
-        .btn-action {
-            background: linear-gradient(135deg, #38bdf8 0%, #2563eb 100%);
-            color: #ffffff;
-            border: none;
-            padding: 18px 32px;
-            font-size: 16px;
-            font-weight: 700;
-            border-radius: 20px;
-            cursor: pointer;
-            width: 100%;
-            letter-spacing: 0.5px;
-            box-shadow: 0 10px 25px rgba(37, 99, 235, 0.3);
-            transition: all 0.2s;
-        }
-        .btn-action:active {
-            transform: scale(0.96);
-            opacity: 0.9;
-        }
-        
-        /* Response Action Status Color Filters Override Styles */
-        .btn-core.state-correct { 
-            background: linear-gradient(135deg, #10b981 0%, #047857 100%) !important; 
-            border-color: #34d399 !important;
-            box-shadow: 0 0 25px rgba(16, 185, 129, 0.5) !important;
-        }
-        .btn-core.state-wrong { 
-            background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%) !important; 
-            border-color: #f87171 !important;
-            box-shadow: 0 0 25px rgba(239, 68, 68, 0.5) !important;
-            animation: impactShake 0.25s linear;
+        .options-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+        .btn-core {
+            background: linear-gradient(135deg, #2e333d 0%, #20242b 100%);
+            color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.06);
+            padding: 20px 10px; font-size: 26px; font-weight: 700; border-radius: 18px;
+            cursor: pointer; outline: none; min-height: 68px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
         }
 
-        /* Screen Embedded App Popup Alert Modals Layout */
+        .btn-core:active { transform: scale(0.96); }
+        .btn-core.state-correct {
+            background: linear-gradient(135deg, var(--success) 0%, #047857 100%) !important;
+            border-color: #34d399 !important; box-shadow: 0 0 22px rgba(16, 185, 129, 0.5) !important;
+        }
+        .btn-core.state-wrong {
+            background: linear-gradient(135deg, var(--danger) 0%, #b91c1c 100%) !important;
+            border-color: #f87171 !important; box-shadow: 0 0 22px rgba(239, 68, 68, 0.5) !important;
+            animation: impactShake 0.22s linear;
+        }
+        .btn-core.locked { pointer-events: none; opacity: 0.7; }
+
         .modal-overlay {
-            display: none;
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(15, 17, 21, 0.95);
-            border-radius: 32px;
-            z-index: 10;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 30px;
-            animation: fadeIn 0.3s ease-out forwards;
+            display: none; position: absolute; inset: 0;
+            background: rgba(15, 17, 21, 0.96); border-radius: 32px; z-index: 20;
+            flex-direction: column; justify-content: center; align-items: center;
+            padding: 28px 24px; animation: fadeIn 0.28s ease-out forwards;
         }
         .modal-overlay.active { display: flex; }
-        .modal-icon { font-size: 54px; margin-bottom: 15px; }
-        .modal-title { font-size: 26px; font-weight: 800; margin-bottom: 10px; color: #fff; }
-        .modal-desc { font-size: 15px; color: #94a3b8; margin-bottom: 30px; line-height: 1.5; }
+        #pause-modal {
+            z-index: 30; background: rgba(15, 17, 21, 0.92);
+            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+        }
+        .modal-icon { font-size: 50px; margin-bottom: 12px; }
+        .modal-title { font-size: 24px; font-weight: 800; margin-bottom: 8px; color: #fff; }
+        .modal-desc { font-size: 14px; color: var(--muted); margin-bottom: 24px; line-height: 1.55; max-width: 300px; }
 
-        /* Burst Animation Particles Elements layout structures */
+        #red-flash {
+            position: fixed; inset: 0; background: rgba(239, 68, 68, 0.35);
+            pointer-events: none; opacity: 0; z-index: 900; transition: opacity 0.05s linear;
+        }
+        #red-flash.active { opacity: 1; }
+
         .fx-particle {
-            position: absolute;
-            background: #34d399;
-            border-radius: 50%;
-            pointer-events: none;
-            opacity: 1;
+            position: fixed; background: #34d399; border-radius: 50%; pointer-events: none; z-index: 50;
             animation: scatter 0.5s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
-            z-index: 5;
         }
 
-        @keyframes fadeIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.97); } to { opacity: 1; transform: scale(1); } }
         @keyframes impactShake {
             0%, 100% { transform: translateX(0); }
-            20% { transform: translateX(-8px); }
-            40% { transform: translateX(6px); }
-            60% { transform: translateX(-4px); }
-            80% { transform: translateX(3px); }
+            25% { transform: translateX(-7px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-3px); }
         }
-        @keyframes scatter {
-            to { transform: translate(var(--x), var(--y)) scale(0); opacity: 0; }
-        }
+        @keyframes scatter { to { transform: translate(var(--x), var(--y)) scale(0); opacity: 0; } }
     </style>
 </head>
 <body>
 
-<div class="game-arena" id="arena">
-    
-    <div id="start-screen" class="screen active">
-        <div class="app-logo">∑</div>
-        <h1 class="welcome-title">Speed Maths Pro</h1>
-        <p class="welcome-subtitle">Train your brain. Run the endless operations.</p>
-        <button class="btn-action" onclick="changeScreen('game-screen'); triggerMatch();">START</button>
-    </div>
+<div id="red-flash" aria-hidden="true"></div>
 
-    <div id="game-screen" class="screen">
-        <div class="hud-display">
-            <div class="hud-chip">Level <div id="level">1</div></div>
-            <div class="hud-chip">Score <div id="score">0/10</div></div>
-            <div class="hud-chip">Time <div id="timer">15</div></div>
-        </div>
-        
-        <div class="formula-window">
-            <div class="equation" id="equation">---</div>
-        </div>
-        
-        <div class="options-layout">
-            <button class="btn-core" onclick="evaluateSelection(this)">-</button>
-            <button class="btn-core" onclick="evaluateSelection(this)">-</button>
-            <button class="btn-core" onclick="evaluateSelection(this)">-</button>
-            <button class="btn-core" onclick="evaluateSelection(this)">-</button>
-        </div>
-    </div>
+<div id="ad-banner-zone" aria-label="Advertisement banner area">
+    <span>AdMob Banner · 60px</span>
+</div>
 
-    <div id="alert-modal" class="modal-overlay">
-        <div id="modal-icon" class="modal-icon">🎉</div>
-        <div id="modal-title" class="modal-title">Level Up!</div>
-        <div id="modal-desc" class="modal-desc">Description text logic</div>
-        <button id="modal-btn" class="btn-action" onclick="closeAppModal()">CONTINUE</button>
+<div class="app-shell">
+    <div class="game-arena" id="arena">
+
+        <div id="menu-screen" class="screen active">
+            <div class="app-logo">∑</div>
+            <h1 class="welcome-title">Speed Maths Pro</h1>
+            <p class="welcome-subtitle" id="menu-subtitle">Train your brain across 1,000 levels of lightning-fast mental math.</p>
+            <div class="stat-row">
+                <div class="stat-pill">Highest Level<strong id="menu-highest">1</strong></div>
+            </div>
+            <div id="menu-buttons"></div>
+        </div>
+
+        <div id="game-screen" class="screen">
+            <div class="game-top-bar">
+                <div class="hud-display">
+                    <div class="hud-chip">Level<div id="hud-level">1</div></div>
+                    <div class="hud-chip">Progress<div id="hud-progress">0/15</div></div>
+                    <div class="hud-chip">Score<div id="hud-score">0</div></div>
+                </div>
+                <button type="button" class="btn-pause" id="pause-btn" aria-label="Pause game" title="Pause">⏸</button>
+            </div>
+
+            <div class="lifelines-row">
+                <span class="lifelines-label">Lifelines</span>
+                <span class="heart" id="heart-1">❤️</span>
+                <span class="heart" id="heart-2">❤️</span>
+            </div>
+
+            <div class="timer-block">
+                <div class="timer-ring-wrap">
+                    <svg viewBox="0 0 72 72" aria-hidden="true">
+                        <circle class="timer-ring-bg" cx="36" cy="36" r="32"></circle>
+                        <circle class="timer-ring-progress safe" id="timer-ring" cx="36" cy="36" r="32"></circle>
+                    </svg>
+                    <div class="timer-value" id="timer-display">15</div>
+                </div>
+            </div>
+
+            <div class="formula-window">
+                <div class="equation" id="equation">—</div>
+            </div>
+
+            <div class="options-layout">
+                <button type="button" class="btn-core" data-index="0"></button>
+                <button type="button" class="btn-core" data-index="1"></button>
+                <button type="button" class="btn-core" data-index="2"></button>
+                <button type="button" class="btn-core" data-index="3"></button>
+            </div>
+        </div>
+
+        <div id="pause-modal" class="modal-overlay">
+            <div class="modal-icon">⏸️</div>
+            <div class="modal-title">Game Paused</div>
+            <div class="modal-desc">Take a breath. Your timer is frozen until you resume.</div>
+            <button type="button" class="btn-action" id="pause-resume-btn">Resume</button>
+            <button type="button" class="btn-action secondary" id="pause-menu-btn">Main Menu</button>
+        </div>
+
+        <div id="level-complete-modal" class="modal-overlay">
+            <div class="modal-icon">🎉</div>
+            <div class="modal-title">Level Complete!</div>
+            <div class="modal-desc" id="level-complete-desc">You mastered this stage.</div>
+            <button type="button" class="btn-action" id="level-complete-btn">Continue</button>
+        </div>
+
+        <div id="level-failed-modal" class="modal-overlay">
+            <div class="modal-icon">💔</div>
+            <div class="modal-title">Level Failed</div>
+            <div class="modal-desc" id="level-failed-desc">You ran out of time or lifelines.</div>
+            <button type="button" class="btn-action" id="level-failed-btn">Try Again</button>
+        </div>
+
+        <div id="max-level-modal" class="modal-overlay">
+            <div class="modal-icon">🏆</div>
+            <div class="modal-title">Champion!</div>
+            <div class="modal-desc">You conquered all 1,000 levels. Incredible achievement!</div>
+            <button type="button" class="btn-action" id="max-level-btn">Play Again</button>
+        </div>
+
     </div>
 </div>
 
 <script>
-    let currentLvl = 1; let pointTotal = 0; let clocksLeft = 15; let rightAnswer = 0; let activeClock;
-    let modalCallback = null;
-    
-    function changeScreen(screenId) {
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        document.getElementById(screenId).classList.add('active');
+(function () {
+    "use strict";
+
+    const STORAGE_KEY = "speedMathsPro_v2";
+    const QUESTIONS_PER_LEVEL = 15;
+    const QUESTION_TIME_SEC = 15;
+    const MAX_LEVEL = 1000;
+    const LIFELINES_PER_LEVEL = 2;
+    const TIMER_CIRCUMFERENCE = 2 * Math.PI * 32;
+
+    const menuButtons = document.getElementById("menu-buttons");
+    const menuHighest = document.getElementById("menu-highest");
+    const menuSubtitle = document.getElementById("menu-subtitle");
+    const gameScreen = document.getElementById("game-screen");
+    const hudLevel = document.getElementById("hud-level");
+    const hudProgress = document.getElementById("hud-progress");
+    const hudScore = document.getElementById("hud-score");
+    const equationEl = document.getElementById("equation");
+    const timerDisplay = document.getElementById("timer-display");
+    const timerRing = document.getElementById("timer-ring");
+    const redFlash = document.getElementById("red-flash");
+    const pauseBtn = document.getElementById("pause-btn");
+    const pauseModal = document.getElementById("pause-modal");
+    const levelCompleteModal = document.getElementById("level-complete-modal");
+    const levelFailedModal = document.getElementById("level-failed-modal");
+    const maxLevelModal = document.getElementById("max-level-modal");
+    const levelCompleteDesc = document.getElementById("level-complete-desc");
+    const levelFailedDesc = document.getElementById("level-failed-desc");
+    const optionButtons = Array.from(document.querySelectorAll(".btn-core"));
+
+    let currentLevel = 1;
+    let correctInLevel = 0;
+    let sessionScore = 0;
+    let lifelines = LIFELINES_PER_LEVEL;
+    let rightAnswer = 0;
+    let timerRemaining = QUESTION_TIME_SEC;
+    let timerInterval = null;
+    let inputLocked = false;
+    let highestLevelReached = 1;
+    let isPaused = false;
+
+    function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+    function pick(arr) { return arr[randInt(0, arr.length - 1)]; }
+    function clamp(n, min, max) { return Math.max(min, Math.min(max, n)); }
+
+    function isBlockingModalOpen() {
+        return levelCompleteModal.classList.contains("active") ||
+            levelFailedModal.classList.contains("active") ||
+            maxLevelModal.classList.contains("active");
     }
 
-    function showAppModal(icon, title, desc, buttonText, callback) {
-        document.getElementById("modal-icon").innerText = icon;
-        document.getElementById("modal-title").innerText = title;
-        document.getElementById("modal-desc").innerText = desc;
-        document.getElementById("modal-btn").innerText = buttonText;
-        modalCallback = callback;
-        document.getElementById("alert-modal").classList.add("active");
+    function loadStorage() {
+        try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (!raw) return null;
+            const data = JSON.parse(raw);
+            return data && typeof data === "object" ? data : null;
+        } catch (e) { return null; }
     }
 
-    function closeAppModal() {
-        document.getElementById("alert-modal").classList.remove("active");
-        if (modalCallback) { modalCallback(); }
+    function saveProgress() {
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify({
+                level: currentLevel,
+                correctInLevel: correctInLevel,
+                lifelines: lifelines,
+                sessionScore: sessionScore,
+                highestLevelReached: highestLevelReached
+            }));
+        } catch (e) {}
     }
 
-    function triggerMatch() { 
-        pointTotal = 0; 
-        clocksLeft = 15; 
-        document.getElementById("score").innerText = `0/10`; 
-        document.getElementById("timer").innerText = clocksLeft;
-        queueNextFormula(); 
-        clearInterval(activeClock); 
-        activeClock = setInterval(tickDown, 1000); 
+    function clearSavedProgress() {
+        const stored = loadStorage();
+        highestLevelReached = stored && stored.highestLevelReached ? Math.max(1, stored.highestLevelReached) : highestLevelReached;
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify({
+                level: 1, correctInLevel: 0, lifelines: LIFELINES_PER_LEVEL,
+                sessionScore: 0, highestLevelReached: highestLevelReached
+            }));
+        } catch (e) {}
     }
-    
-    function tickDown() { 
-        clocksLeft--; 
-        document.getElementById("timer").innerText = clocksLeft; 
-        if (clocksLeft <= 0) { 
-            clearInterval(activeClock); 
-            currentLvl = 1; 
-            document.getElementById("level").innerText = currentLvl; 
-            showAppModal("💥", "Time Expired!", "Your concentration broke down. Let's head back to stage level 1 and try fresh.", "TRY AGAIN", function() {
-                triggerMatch();
-            });
-        } 
+
+    function showScreen(id) {
+        document.querySelectorAll(".screen").forEach(function (s) { s.classList.remove("active"); });
+        document.getElementById(id).classList.add("active");
     }
-    
-    function makeRandInt(low, high) { return Math.floor(Math.random() * (high - low + 1)) + low; }
-    
-    function queueNextFormula() {
-        let textStr = "";
-        if (currentLvl === 1) {
-            let numA = makeRandInt(5, 20), numB = makeRandInt(1, 10);
-            let sign = Math.random() > 0.5 ? '+' : '-';
-            textStr = `${numA} ${sign} ${numB}`; rightAnswer = eval(textStr);
-        } else if (currentLvl === 2) {
-            let numA = makeRandInt(2, 6), numB = makeRandInt(2, 5), numC = makeRandInt(1, 10);
-            textStr = `${numA} * ${numB} + ${numC}`; rightAnswer = eval(textStr); textStr = textStr.replace('*', '×');
-        } else {
-            let numA = makeRandInt(2, 5), numB = makeRandInt(10, 20), numC = makeRandInt(2, 5);
-            let targetDiv = numB - (numB % numC); textStr = `${numA} * (${targetDiv} / ${numC})`; rightAnswer = eval(textStr); textStr = `${numA} × (${targetDiv} ÷ ${numC})`;
-        }
-        document.getElementById("equation").innerText = textStr; mapToButtons();
+
+    function openModal(el) { el.classList.add("active"); }
+    function closeModal(el) { el.classList.remove("active"); }
+
+    function closeAllModals() {
+        [pauseModal, levelCompleteModal, levelFailedModal, maxLevelModal].forEach(closeModal);
+        isPaused = false;
+        timerRing.classList.remove("frozen");
+        updatePauseButtonState();
     }
-    
-    function mapToButtons() {
-        let targets = document.querySelectorAll(".btn-core"), randomSpot = Math.floor(Math.random() * 4), badPool = [rightAnswer];
-        for (let idx = 0; idx < 4; idx++) {
-            if (idx === randomSpot) { targets[idx].innerText = rightAnswer; } 
-            else { let badSeed; do { badSeed = rightAnswer + makeRandInt(-12, 12); } while (badPool.includes(badSeed) || badSeed < 0); badPool.push(badSeed); targets[idx].innerText = badSeed; }
+
+    function updatePauseButtonState() {
+        const canPause = gameScreen.classList.contains("active") && !isPaused && !inputLocked && !isBlockingModalOpen();
+        pauseBtn.disabled = !canPause;
+    }
+
+    function updateHeartsUI() {
+        for (let i = 1; i <= LIFELINES_PER_LEVEL; i++) {
+            document.getElementById("heart-" + i).classList.toggle("lost", i > lifelines);
         }
     }
-    
-    function burstFx(xPos, yPos) {
-        for (let i = 0; i < 14; i++) {
-            const p = document.createElement('div');
-            p.classList.add('fx-particle');
-            p.style.left = xPos + 'px'; p.style.top = yPos + 'px';
-            const size = makeRandInt(6, 12); p.style.width = size + 'px'; p.style.height = size + 'px';
-            p.style.setProperty('--x', makeRandInt(-100, 100) + 'px'); p.style.setProperty('--y', makeRandInt(-100, 100) + 'px');
-            document.body.appendChild(p);
-            setTimeout(() => p.remove(), 500);
-        }
+
+    function updateHud() {
+        hudLevel.textContent = String(currentLevel);
+        hudProgress.textContent = correctInLevel + "/" + QUESTIONS_PER_LEVEL;
+        hudScore.textContent = String(sessionScore);
+        menuHighest.textContent = String(highestLevelReached);
     }
-    
-    function evaluateSelection(clickedBtn) {
-        if (clocksLeft <= 0 || document.getElementById("alert-modal").classList.contains("active")) return;
-        let inputVal = parseInt(clickedBtn.innerText);
-        if (inputVal === rightAnswer) {
-            clickedBtn.classList.add("state-correct");
-            const rect = clickedBtn.getBoundingClientRect();
-            burstFx(rect.left + rect.width/2, rect.top + rect.height/2);
-            
-            setTimeout(() => {
-                clickedBtn.classList.remove("state-correct");
-                pointTotal++; clocksLeft += 4; document.getElementById("score").innerText = `${pointTotal}/10`;
-                if (pointTotal >= 10) { 
-                    clearInterval(activeClock);
-                    currentLvl++; 
-                    document.getElementById("level").innerText = currentLvl; 
-                    showAppModal("🎉", "Level Up!", `Outstanding accuracy. Prepare yourself for advanced Stage Level ${currentLvl}!`, "ENTER NEXT STAGE", function() {
-                        triggerMatch();
-                    });
-                } else { queueNextFormula(); }
-            }, 250);
-        } else { 
-            clocksLeft -= 5; 
-            if (clocksLeft < 0) clocksLeft = 0;
-            document.getElementById("timer").innerText = clocksLeft; 
-            clickedBtn.classList.add("state-wrong"); 
-            setTimeout(() => clickedBtn.classList.remove("state-wrong"), 250); 
-            if (clocksLeft === 0) {
-                clearInterval(activeClock);
-                currentLvl = 1;
-                document.getElementById("level").innerText = currentLvl;
-                showAppModal("💥", "Time Expired!", "Your concentration broke down. Let's head back to stage level 1 and try fresh.", "TRY AGAIN", function() {
-                    triggerMatch();
-                });
+
+    function setTimerRing(remaining) {
+        const ratio = remaining / QUESTION_TIME_SEC;
+        timerRing.style.strokeDasharray = String(TIMER_CIRCUMFERENCE);
+        timerRing.style.strokeDashoffset = String(TIMER_CIRCUMFERENCE * (1 - ratio));
+        timerDisplay.textContent = String(remaining);
+        timerRing.classList.remove("safe", "warn");
+        if (remaining > 8) timerRing.classList.add("safe");
+        else if (remaining > 4) timerRing.classList.add("warn");
+    }
+
+    function stopTimer() {
+        if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+    }
+
+    function startTimerTicking() {
+        if (isPaused || isBlockingModalOpen()) return;
+        stopTimer();
+        timerInterval = setInterval(function () {
+            if (isPaused) return;
+            timerRemaining -= 1;
+            if (timerRemaining <= 0) {
+                timerRemaining = 0;
+                setTimerRing(0);
+                stopTimer();
+                onLevelFailed("time");
+                return;
             }
+            setTimerRing(timerRemaining);
+        }, 1000);
+    }
+
+    function startQuestionTimer() {
+        stopTimer();
+        timerRemaining = QUESTION_TIME_SEC;
+        setTimerRing(timerRemaining);
+        if (!isPaused) startTimerTicking();
+    }
+
+    function pauseGame() {
+        if (isPaused || inputLocked || isBlockingModalOpen() || !gameScreen.classList.contains("active")) return;
+        isPaused = true;
+        stopTimer();
+        timerRing.classList.add("frozen");
+        optionButtons.forEach(function (btn) { btn.classList.add("locked"); });
+        openModal(pauseModal);
+        updatePauseButtonState();
+        saveProgress();
+    }
+
+    function resumeGame() {
+        if (!isPaused) return;
+        isPaused = false;
+        closeModal(pauseModal);
+        timerRing.classList.remove("frozen");
+        if (!inputLocked && !isBlockingModalOpen()) {
+            optionButtons.forEach(function (btn) { btn.classList.remove("locked"); });
+            setTimerRing(timerRemaining);
+            startTimerTicking();
+        }
+        updatePauseButtonState();
+    }
+
+    function exitToMainMenu() {
+        isPaused = false;
+        stopTimer();
+        closeAllModals();
+        inputLocked = false;
+        optionButtons.forEach(function (btn) { btn.classList.remove("state-correct", "state-wrong", "locked"); });
+        saveProgress();
+        buildMainMenu();
+    }
+
+    function flashRed() {
+        redFlash.classList.add("active");
+        setTimeout(function () { redFlash.classList.remove("active"); }, 200);
+    }
+
+    function burstFx(x, y) {
+        for (let i = 0; i < 12; i++) {
+            const p = document.createElement("div");
+            p.className = "fx-particle";
+            const size = randInt(5, 10);
+            p.style.width = size + "px";
+            p.style.height = size + "px";
+            p.style.left = x + "px";
+            p.style.top = y + "px";
+            p.style.setProperty("--x", randInt(-90, 90) + "px");
+            p.style.setProperty("--y", randInt(-90, 90) + "px");
+            document.body.appendChild(p);
+            setTimeout(function () { p.remove(); }, 520);
         }
     }
+
+    function tierForLevel(level) {
+        if (level <= 10) return 1;
+        if (level <= 50) return 2;
+        if (level <= 200) return 3;
+        return 4;
+    }
+
+    function scaleWithinTier(level) {
+        const t = tierForLevel(level);
+        if (t === 1) return (level - 1) / 9;
+        if (t === 2) return (level - 11) / 39;
+        if (t === 3) return (level - 51) / 149;
+        return (level - 201) / 799;
+    }
+
+    function generateQuestion(level) {
+        const tier = tierForLevel(level);
+        const progress = scaleWithinTier(level);
+
+        if (tier === 1) {
+            const a = randInt(1, 10), b = randInt(1, 10);
+            const op = Math.random() < 0.5 ? "+" : "-";
+            if (op === "-" && a < b) return generateQuestion(level);
+            return { text: a + " " + op + " " + b, answer: op === "+" ? a + b : a - b };
+        }
+
+        if (tier === 2) {
+            if (Math.random() < 0.55) {
+                const a = randInt(10, 99), b = randInt(10, 99);
+                const op = Math.random() < 0.5 ? "+" : "-";
+                if (op === "-" && a < b) return generateQuestion(level);
+                return { text: a + " " + op + " " + b, answer: op === "+" ? a + b : a - b };
+            }
+            const a = randInt(2, 9), b = randInt(2, 9);
+            return { text: a + " × " + b, answer: a * b };
+        }
+
+        if (tier === 3) {
+            const roll = Math.random();
+            if (roll < 0.35) {
+                const a = randInt(12, 99), b = randInt(2, 12);
+                if (a % b !== 0) return generateQuestion(level);
+                return { text: a + " ÷ " + b, answer: a / b };
+            }
+            if (roll < 0.7) {
+                const a = randInt(2, 12), b = randInt(2, 12), c = randInt(5, 40);
+                return { text: a + " × " + b + " + " + c, answer: a * b + c };
+            }
+            const a = randInt(20, 99), b = randInt(10, 50);
+            const op = Math.random() < 0.5 ? "+" : "-";
+            if (op === "-" && a < b) return generateQuestion(level);
+            return { text: a + " " + op + " " + b, answer: op === "+" ? a + b : a - b };
+        }
+
+        const maxBase = Math.floor(100 + progress * 899);
+        const maxNum = clamp(maxBase + randInt(0, 50), 100, 999);
+        const complexity = clamp(Math.floor(2 + progress * 4), 2, 6);
+        const ops = ["+", "-", "×", "÷"];
+
+        function rVal() { return randInt(2, maxNum); }
+
+        if (complexity <= 3 || Math.random() < 0.4) {
+            const a = rVal(), b = rVal(), op = pick(ops);
+            if (op === "÷") {
+                const divisor = randInt(2, Math.min(25, Math.max(3, Math.floor(maxNum / 10))));
+                const quotient = randInt(2, Math.min(99, Math.floor(maxNum / divisor)));
+                const dividend = divisor * quotient;
+                return { text: dividend + " ÷ " + divisor, answer: quotient };
+            }
+            if (op === "×") {
+                const x = randInt(2, Math.min(25, 12 + Math.floor(progress * 20)));
+                const y = randInt(2, Math.min(25, 12 + Math.floor(progress * 20)));
+                return { text: x + " × " + y, answer: x * y };
+            }
+            if (op === "-" && a < b) return generateQuestion(level);
+            return { text: a + " " + op + " " + b, answer: op === "+" ? a + b : a - b };
+        }
+
+        const x = randInt(2, Math.min(20, 5 + Math.floor(progress * 15)));
+        const y = randInt(2, Math.min(20, 5 + Math.floor(progress * 15)));
+        const inner = x * y;
+        const z = randInt(5, Math.min(maxNum, 80 + Math.floor(progress * 200)));
+        const useAdd = Math.random() < 0.5;
+        const answer = useAdd ? inner + z : inner - z;
+        if (answer < 0) return generateQuestion(level);
+        return { text: x + " × " + y + (useAdd ? " + " : " − ") + z, answer: answer };
+    }
+
+    function mapOptions(correct) {
+        const pool = [correct];
+        const spread = Math.max(8, Math.min(40, Math.floor(Math.abs(correct) * 0.15) + 10));
+        while (pool.length < 4) {
+            let wrong = correct + randInt(-spread, spread);
+            if (wrong === correct || wrong < 0 || pool.includes(wrong)) {
+                wrong = correct + pool.length * randInt(2, 6) + randInt(1, 5);
+            }
+            if (wrong !== correct && wrong >= 0 && !pool.includes(wrong)) pool.push(wrong);
+        }
+        const shuffled = pool.sort(function () { return Math.random() - 0.5; });
+        optionButtons.forEach(function (btn, idx) {
+            btn.textContent = String(shuffled[idx]);
+            btn.classList.remove("state-correct", "state-wrong", "locked");
+        });
+    }
+
+    function loadNextQuestion() {
+        if (isPaused) return;
+        inputLocked = false;
+        const q = generateQuestion(currentLevel);
+        rightAnswer = q.answer;
+        equationEl.textContent = q.text;
+        mapOptions(rightAnswer);
+        startQuestionTimer();
+        saveProgress();
+        updatePauseButtonState();
+    }
+
+    function lockOptions() {
+        inputLocked = true;
+        optionButtons.forEach(function (btn) { btn.classList.add("locked"); });
+        updatePauseButtonState();
+    }
+
+    function onLevelFailed(reason) {
+        if (levelFailedModal.classList.contains("active")) return;
+        isPaused = false;
+        closeModal(pauseModal);
+        lockOptions();
+        stopTimer();
+        levelFailedDesc.textContent = reason === "time"
+            ? "The 15-second clock hit zero on Level " + currentLevel + ". Retry this exact stage from Question 1."
+            : "Both lifelines are gone on Level " + currentLevel + ". Retry this exact stage from Question 1.";
+        openModal(levelFailedModal);
+        saveProgress();
+        updatePauseButtonState();
+    }
+
+    function onLevelComplete() {
+        isPaused = false;
+        closeModal(pauseModal);
+        stopTimer();
+        lockOptions();
+        if (currentLevel >= MAX_LEVEL) {
+            highestLevelReached = MAX_LEVEL;
+            saveProgress();
+            openModal(maxLevelModal);
+            updatePauseButtonState();
+            return;
+        }
+        highestLevelReached = Math.max(highestLevelReached, currentLevel + 1);
+        levelCompleteDesc.textContent = "Perfect run! Level " + currentLevel + " cleared. Level " + (currentLevel + 1) + " is now unlocked.";
+        openModal(levelCompleteModal);
+        saveProgress();
+        updatePauseButtonState();
+    }
+
+    function handleCorrect(btn) {
+        lockOptions();
+        stopTimer();
+        btn.classList.add("state-correct");
+        const rect = btn.getBoundingClientRect();
+        burstFx(rect.left + rect.width / 2, rect.top + rect.height / 2);
+        sessionScore += 10 + currentLevel;
+        correctInLevel += 1;
+        updateHud();
+        saveProgress();
+        setTimeout(function () {
+            btn.classList.remove("state-correct");
+            if (correctInLevel >= QUESTIONS_PER_LEVEL) onLevelComplete();
+            else loadNextQuestion();
+        }, 280);
+    }
+
+    function handleWrong(btn) {
+        lockOptions();
+        btn.classList.add("state-wrong");
+        flashRed();
+        lifelines -= 1;
+        updateHeartsUI();
+        saveProgress();
+        setTimeout(function () {
+            btn.classList.remove("state-wrong");
+            if (lifelines <= 0) onLevelFailed("lifelines");
+            else loadNextQuestion();
+        }, 220);
+    }
+
+    function handleAnswer(btn) {
+        if (isPaused || inputLocked || isBlockingModalOpen()) return;
+        const chosen = parseInt(btn.textContent, 10);
+        if (chosen === rightAnswer) handleCorrect(btn);
+        else handleWrong(btn);
+    }
+
+    function beginLevel(level, resetProgress) {
+        closeAllModals();
+        isPaused = false;
+        currentLevel = clamp(level, 1, MAX_LEVEL);
+        if (resetProgress) { correctInLevel = 0; sessionScore = 0; }
+        lifelines = LIFELINES_PER_LEVEL;
+        updateHeartsUI();
+        updateHud();
+        showScreen("game-screen");
+        loadNextQuestion();
+        updatePauseButtonState();
+    }
+
+    function buildMainMenu() {
+        isPaused = false;
+        stopTimer();
+        const data = loadStorage();
+        highestLevelReached = data && data.highestLevelReached ? Math.max(1, data.highestLevelReached) : 1;
+        menuHighest.textContent = String(highestLevelReached);
+        menuButtons.innerHTML = "";
+
+        const savedLevel = data && data.level ? clamp(data.level, 1, MAX_LEVEL) : 1;
+        const hasResume = savedLevel > 1 || (savedLevel === 1 && data && data.correctInLevel > 0);
+
+        if (hasResume) {
+            menuSubtitle.textContent = "Welcome back! Continue your journey or begin a fresh run from Level 1.";
+            const resumeBtn = document.createElement("button");
+            resumeBtn.type = "button";
+            resumeBtn.className = "btn-action";
+            resumeBtn.textContent = "Resume Game (Level " + savedLevel + ")";
+            resumeBtn.addEventListener("click", function () {
+                currentLevel = savedLevel;
+                correctInLevel = data.correctInLevel || 0;
+                sessionScore = data.sessionScore || 0;
+                lifelines = typeof data.lifelines === "number" ? clamp(data.lifelines, 0, LIFELINES_PER_LEVEL) : LIFELINES_PER_LEVEL;
+                if (lifelines <= 0) lifelines = LIFELINES_PER_LEVEL;
+                beginLevel(currentLevel, false);
+            });
+            menuButtons.appendChild(resumeBtn);
+
+            const newBtn = document.createElement("button");
+            newBtn.type = "button";
+            newBtn.className = "btn-action secondary";
+            newBtn.textContent = "Start New Game";
+            newBtn.addEventListener("click", function () {
+                clearSavedProgress();
+                beginLevel(1, true);
+            });
+            menuButtons.appendChild(newBtn);
+        } else {
+            menuSubtitle.textContent = "Train your brain across 1,000 levels. Fifteen correct answers per level. Two lifelines. Fifteen seconds per question.";
+            const playBtn = document.createElement("button");
+            playBtn.type = "button";
+            playBtn.className = "btn-action";
+            playBtn.textContent = "Play";
+            playBtn.addEventListener("click", function () { beginLevel(1, true); });
+            menuButtons.appendChild(playBtn);
+        }
+
+        showScreen("menu-screen");
+        updatePauseButtonState();
+    }
+
+    optionButtons.forEach(function (btn) {
+        btn.addEventListener("click", function () { handleAnswer(btn); });
+    });
+
+    pauseBtn.addEventListener("click", pauseGame);
+    document.getElementById("pause-resume-btn").addEventListener("click", resumeGame);
+    document.getElementById("pause-menu-btn").addEventListener("click", exitToMainMenu);
+
+    document.getElementById("level-complete-btn").addEventListener("click", function () {
+        closeModal(levelCompleteModal);
+        currentLevel += 1;
+        correctInLevel = 0;
+        lifelines = LIFELINES_PER_LEVEL;
+        beginLevel(currentLevel, true);
+    });
+
+    document.getElementById("level-failed-btn").addEventListener("click", function () {
+        closeModal(levelFailedModal);
+        correctInLevel = 0;
+        lifelines = LIFELINES_PER_LEVEL;
+        beginLevel(currentLevel, true);
+    });
+
+    document.getElementById("max-level-btn").addEventListener("click", function () {
+        closeModal(maxLevelModal);
+        clearSavedProgress();
+        buildMainMenu();
+    });
+
+    timerRing.style.strokeDasharray = String(TIMER_CIRCUMFERENCE);
+    buildMainMenu();
+})();
 </script>
 </body>
 </html>
