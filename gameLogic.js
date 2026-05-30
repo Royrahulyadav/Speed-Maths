@@ -299,6 +299,9 @@
         optionButtons.forEach(function (btn) { btn.classList.remove("state-correct", "state-wrong", "locked"); });
         saveProgress();
         buildMainMenu();
+        try {
+            history.pushState({ page: "menu" }, "");
+        } catch(e) {}
     }
 
     function flashRed() {
@@ -678,6 +681,9 @@
         showScreen("game-screen");
         loadNextQuestion();
         updatePauseButtonState();
+        try {
+            history.pushState({ page: "game" }, "");
+        } catch(e) {}
     }
 
     function buildMainMenu() {
@@ -852,6 +858,75 @@
     document.body.addEventListener("click", function() {
         initAudio();
     }, { once: false });
+
+    // Handle Page Visibility changes (app backgrounding / screen lock)
+    document.addEventListener("visibilitychange", function () {
+        if (document.hidden) {
+            pauseGame();
+            if (audioCtx && audioCtx.state === "running") {
+                audioCtx.suspend();
+            }
+        } else {
+            if (audioCtx && audioCtx.state === "suspended") {
+                audioCtx.resume();
+            }
+        }
+    });
+
+    // Navigation and Hardware Back Button interceptor
+    const exitConfirmModal = document.getElementById("exit-confirm-modal");
+
+    function showExitConfirmationModal() {
+        openModal(exitConfirmModal);
+        try {
+            history.pushState({ page: "exit_confirm" }, "");
+        } catch (e) {}
+    }
+
+    document.getElementById("exit-no-btn").addEventListener("click", function() {
+        closeModal(exitConfirmModal);
+        try {
+            history.pushState({ page: "menu" }, "");
+        } catch(e) {}
+    });
+
+    document.getElementById("exit-yes-btn").addEventListener("click", function() {
+        closeModal(exitConfirmModal);
+        try {
+            // Goes back twice to pop our states and trigger native back dialog
+            history.go(-2);
+        } catch(e) {}
+    });
+
+    window.addEventListener("popstate", function (event) {
+        if (exitConfirmModal.classList.contains("active")) {
+            closeModal(exitConfirmModal);
+            try {
+                history.pushState({ page: "menu" }, "");
+            } catch(e) {}
+            return;
+        }
+
+        if (gameScreen.classList.contains("active")) {
+            // Inside game play: Back button pauses or resumes the game
+            if (!isPaused && !isBlockingModalOpen()) {
+                pauseGame();
+            } else if (isPaused) {
+                resumeGame();
+            }
+            try {
+                history.pushState({ page: "game" }, "");
+            } catch(e) {}
+        } else {
+            // In main menu: Back button opens our custom Exit Confirmation Dialog
+            showExitConfirmationModal();
+        }
+    });
+
+    // Push initial history state for back button navigation
+    try {
+        history.pushState({ page: "menu" }, "");
+    } catch(e) {}
 
     // Startup configuration
     timerRing.style.strokeDasharray = String(TIMER_CIRCUMFERENCE);
