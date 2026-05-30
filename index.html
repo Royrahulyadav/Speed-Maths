@@ -359,7 +359,220 @@
     </div>
 </div>
 
-<script src="gameLogic.js"></script>
+<script>
+(function (global) {
+    "use strict";
+
+    var ADMOB_APP_ID = "ca-app-pub-8432977670887586~2175698232";
+    var BANNER_AD_UNIT_ID = "ca-app-pub-8432977670887586/6678050028";
+    var REWARDED_AD_UNIT_ID = "ca-app-pub-8432977670887586/1779880907";
+    var MAX_LEVEL = 1000;
+    var MAX_REWARDED_RETRIES = 10;
+
+    var rewardedAdReady = false;
+    var rewardedAdLoading = false;
+    var rewardedLoadRetries = 0;
+    var onEarnedRewardCallback = null;
+    var onClosedCallback = null;
+
+    function safeRun(label, fn) {
+        try {
+            return fn();
+        } catch (err) {
+            console.error("[SpeedMaths Safety]", label, err);
+            return null;
+        }
+    }
+
+    function clampInt(n, min, max) {
+        n = Math.floor(Number(n));
+        if (isNaN(n)) return min;
+        return Math.max(min, Math.min(max, n));
+    }
+
+    function getBridge() {
+        if (global.Android && typeof global.Android.initAdMob === "function") {
+            return global.Android;
+        }
+        return null;
+    }
+
+    function initAdMob() {
+        safeRun("initAdMob", function () {
+            var bridge = getBridge();
+            if (bridge) {
+                bridge.initAdMob(ADMOB_APP_ID);
+                if (typeof bridge.loadBannerAd === "function") {
+                    bridge.loadBannerAd(BANNER_AD_UNIT_ID, "ad-banner-container");
+                }
+                loadRewardedAd();
+                return;
+            }
+            console.warn("[AdMob] Native bridge not found. Ads disabled in browser.");
+        });
+    }
+
+    function loadRewardedAd() {
+        safeRun("loadRewardedAd", function () {
+            var bridge = getBridge();
+            if (!bridge || typeof bridge.loadRewardedAd !== "function") return;
+            if (rewardedAdLoading || rewardedAdReady) return;
+            rewardedAdLoading = true;
+            bridge.loadRewardedAd(REWARDED_AD_UNIT_ID);
+        });
+    }
+
+    function showRewardedAd(onEarned, onClosed) {
+        onEarnedRewardCallback = onEarned || null;
+        onClosedCallback = onClosed || null;
+
+        safeRun("showRewardedAd", function () {
+            var bridge = getBridge();
+            if (!bridge || typeof bridge.showRewardedAd !== "function") {
+                alert("Ad not ready, please try again");
+                if (onClosedCallback) onClosedCallback();
+                return;
+            }
+
+            if (!rewardedAdReady) {
+                alert("Ad not ready, please try again");
+                loadRewardedAd();
+                if (onClosedCallback) onClosedCallback();
+                return;
+            }
+
+            bridge.showRewardedAd();
+        });
+    }
+
+    function grantLifelineFromReward() {
+        safeRun("grantLifelineFromReward", function () {
+            if (typeof onEarnedRewardCallback === "function") {
+                var cb = onEarnedRewardCallback;
+                onEarnedRewardCallback = null;
+                cb();
+            }
+        });
+    }
+
+    function handleRewardedClosedWithoutReward() {
+        safeRun("handleRewardedClosedWithoutReward", function () {
+            rewardedAdReady = false;
+            rewardedAdLoading = false;
+            loadRewardedAd();
+
+            if (typeof onClosedCallback === "function") {
+                var cb = onClosedCallback;
+                onClosedCallback = null;
+                cb();
+            }
+        });
+    }
+
+    global.onUserEarnedReward = function () {
+        safeRun("onUserEarnedReward", function () {
+            rewardedAdReady = false;
+            rewardedAdLoading = false;
+            rewardedLoadRetries = 0;
+            grantLifelineFromReward();
+            loadRewardedAd();
+        });
+    };
+
+    global.onRewardedAdFailed = function () {
+        safeRun("onRewardedAdFailed", handleRewardedClosedWithoutReward);
+    };
+
+    global.onRewardedAdDismissed = function (rewardGranted) {
+        safeRun("onRewardedAdDismissed", function () {
+            if (rewardGranted === true || rewardGranted === "true" || rewardGranted === 1) {
+                return;
+            }
+            handleRewardedClosedWithoutReward();
+        });
+    };
+
+    global.onRewardedAdLoaded = function () {
+        safeRun("onRewardedAdLoaded", function () {
+            rewardedAdReady = true;
+            rewardedAdLoading = false;
+            rewardedLoadRetries = 0;
+        });
+    };
+
+    global.onRewardedAdLoadFailed = function () {
+        safeRun("onRewardedAdLoadFailed", function () {
+            rewardedAdReady = false;
+            rewardedAdLoading = false;
+            if (rewardedLoadRetries < MAX_REWARDED_RETRIES) {
+                rewardedLoadRetries += 1;
+                setTimeout(loadRewardedAd, 5000);
+            }
+        });
+    };
+
+    global.SpeedMathsAdMob = {
+        initAdMob: initAdMob,
+        loadRewardedAd: loadRewardedAd,
+        showRewardedAd: showRewardedAd,
+        isRewardedReady: function () { return rewardedAdReady; }
+    };
+
+    var HIGHEST_LEVEL_KEY = "speedMathsPro_highestLevel";
+
+    function getHighestLevel() {
+        try {
+            var n = parseInt(localStorage.getItem(HIGHEST_LEVEL_KEY), 10);
+            return clampInt(isNaN(n) ? 1 : n, 1, MAX_LEVEL);
+        } catch (e) {
+            return 1;
+        }
+    }
+
+    function updateHighestLevel(unlockedLevel) {
+        unlockedLevel = clampInt(unlockedLevel, 1, MAX_LEVEL);
+        var updated = Math.max(getHighestLevel(), unlockedLevel);
+        try {
+            localStorage.setItem(HIGHEST_LEVEL_KEY, String(updated));
+        } catch (e) {}
+        return updated;
+    }
+
+    function refreshMenuHighestLevel() {
+        safeRun("refreshMenuHighestLevel", function () {
+            var el = document.getElementById("menu-highest");
+            if (el) el.textContent = String(getHighestLevel());
+        });
+    }
+
+    function getLevelCompleteMessage(completedLevel, nextLevel) {
+        completedLevel = clampInt(completedLevel, 1, MAX_LEVEL);
+        nextLevel = clampInt(nextLevel, 1, MAX_LEVEL);
+        if (completedLevel % 10 === 0) {
+            return "Master of Math! Level " + completedLevel + " complete!";
+        }
+        return "Perfect run! Level " + completedLevel + " cleared. Level " + nextLevel + " is now unlocked.";
+    }
+
+    global.SpeedMathsProgress = {
+        getHighestLevel: getHighestLevel,
+        updateHighestLevel: updateHighestLevel,
+        refreshMenuHighestLevel: refreshMenuHighestLevel,
+        getLevelCompleteMessage: getLevelCompleteMessage
+    };
+
+    global.SpeedMathsSafety = {
+        safeRun: safeRun,
+        clampInt: clampInt
+    };
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", initAdMob);
+    } else {
+        initAdMob();
+    }
+})(window);
+</script>
 <script>
 (function () {
     "use strict";
@@ -882,184 +1095,4 @@
 
     function onLevelComplete() {
         isPaused = false;
-        closeModal(pauseModal);
-        stopTimer();
-        lockOptions();
-        if (currentLevel >= MAX_LEVEL) {
-            highestLevelReached = SpeedMathsProgress.updateHighestLevel(MAX_LEVEL);
-            SpeedMathsProgress.refreshMenuHighestLevel();
-            saveProgress();
-            openModal(maxLevelModal);
-            updatePauseButtonState();
-            return;
-        }
-        const completedLevel = currentLevel;
-        currentLevel += 1;
-        correctInLevel = 0;
-        lifelines = LIFELINES_PER_LEVEL;
-        highestLevelReached = SpeedMathsProgress.updateHighestLevel(currentLevel);
-        levelCompleteDesc.textContent = SpeedMathsProgress.getLevelCompleteMessage(completedLevel, currentLevel);
-        SpeedMathsProgress.refreshMenuHighestLevel();
-        updateHud();
-        openModal(levelCompleteModal);
-        saveProgress();
-        updatePauseButtonState();
-    }
-
-    function handleCorrect(btn) {
-        lockOptions();
-        stopTimer();
-        btn.classList.add("state-correct");
-        const rect = btn.getBoundingClientRect();
-        burstFx(rect.left + rect.width / 2, rect.top + rect.height / 2);
-        sessionScore += 10 + currentLevel;
-        correctInLevel += 1;
-        updateHud();
-        saveProgress();
-        setTimeout(function () {
-            btn.classList.remove("state-correct");
-            if (correctInLevel >= QUESTIONS_PER_LEVEL) onLevelComplete();
-            else loadNextQuestion();
-        }, 280);
-    }
-
-    function handleWrong(btn) {
-        lockOptions();
-        btn.classList.add("state-wrong");
-        flashRed();
-        lifelines -= 1;
-        updateHeartsUI();
-        saveProgress();
-        lastFailReason = "lifelines";
-        setTimeout(function () {
-            btn.classList.remove("state-wrong");
-            if (lifelines <= 0) onLevelFailed("lifelines");
-            else {
-                inputLocked = false;
-                loadNextQuestion();
-            }
-        }, 220);
-    }
-
-    function handleAnswer(btn) {
-        if (isPaused || inputLocked || isBlockingModalOpen()) return;
-        safeGameRun("handleAnswer", function () {
-            const chosen = parseInt(btn.textContent, 10);
-            if (chosen === rightAnswer) handleCorrect(btn);
-            else handleWrong(btn);
-        });
-    }
-
-    function beginLevel(level, resetProgress) {
-        sanitizeGameState();
-        closeAllModals();
-        isPaused = false;
-        currentLevel = clamp(level, 1, MAX_LEVEL);
-        if (resetProgress) { correctInLevel = 0; sessionScore = 0; }
-        lifelines = LIFELINES_PER_LEVEL;
-        updateHeartsUI();
-        updateHud();
-        showScreen("game-screen");
-        loadNextQuestion();
-        updatePauseButtonState();
-    }
-
-    function buildMainMenu() {
-        isPaused = false;
-        stopTimer();
-        const data = loadStorage();
-        highestLevelReached = Math.max(
-            data && data.highestLevelReached ? Math.max(1, data.highestLevelReached) : 1,
-            SpeedMathsProgress.getHighestLevel()
-        );
-        sanitizeGameState();
-        SpeedMathsProgress.refreshMenuHighestLevel();
-        menuButtons.innerHTML = "";
-
-        const savedLevel = data && data.level ? clamp(data.level, 1, MAX_LEVEL) : 1;
-        const hasResume = savedLevel > 1 || (savedLevel === 1 && data && data.correctInLevel > 0);
-
-        if (hasResume) {
-            menuSubtitle.textContent = "Welcome back! Continue your journey or begin a fresh run from Level 1.";
-            const resumeBtn = document.createElement("button");
-            resumeBtn.type = "button";
-            resumeBtn.className = "btn-action";
-            resumeBtn.textContent = "Resume Game (Level " + savedLevel + ")";
-            resumeBtn.addEventListener("click", function () {
-                currentLevel = savedLevel;
-                correctInLevel = data.correctInLevel || 0;
-                sessionScore = data.sessionScore || 0;
-                lifelines = typeof data.lifelines === "number" ? clamp(data.lifelines, 0, LIFELINES_PER_LEVEL) : LIFELINES_PER_LEVEL;
-                if (lifelines <= 0) lifelines = LIFELINES_PER_LEVEL;
-                beginLevel(currentLevel, false);
-            });
-            menuButtons.appendChild(resumeBtn);
-
-            const newBtn = document.createElement("button");
-            newBtn.type = "button";
-            newBtn.className = "btn-action secondary";
-            newBtn.textContent = "Start New Game";
-            newBtn.addEventListener("click", function () {
-                clearSavedProgress();
-                beginLevel(1, true);
-            });
-            menuButtons.appendChild(newBtn);
-        } else {
-            menuSubtitle.textContent = "Train your brain across 1,000 levels. Fifteen correct answers per level. Two lifelines. Fifteen seconds per question.";
-            const playBtn = document.createElement("button");
-            playBtn.type = "button";
-            playBtn.className = "btn-action";
-            playBtn.textContent = "Play";
-            playBtn.addEventListener("click", function () { beginLevel(1, true); });
-            menuButtons.appendChild(playBtn);
-        }
-
-        showScreen("menu-screen");
-        updatePauseButtonState();
-    }
-
-    optionButtons.forEach(function (btn) {
-        btn.addEventListener("click", function () {
-            if (inputLocked || isPaused || isBlockingModalOpen()) return;
-            handleAnswer(btn);
-        });
-    });
-
-    pauseBtn.addEventListener("click", pauseGame);
-    document.getElementById("pause-resume-btn").addEventListener("click", resumeGame);
-    document.getElementById("pause-menu-btn").addEventListener("click", exitToMainMenu);
-
-    document.getElementById("level-complete-btn").addEventListener("click", function () {
-        closeModal(levelCompleteModal);
-        beginLevel(currentLevel, true);
-    });
-
-    document.getElementById("level-failed-watch-btn").addEventListener("click", function () {
-        const watchBtn = document.getElementById("level-failed-watch-btn");
-        watchBtn.disabled = true;
-        SpeedMathsAdMob.showRewardedAd(
-            function () {
-                resumeAfterRewardedAd();
-            },
-            function () {
-                updateLevelFailedButtons();
-            }
-        );
-    });
-
-    document.getElementById("level-failed-restart-btn").addEventListener("click", function () {
-        restartCurrentLevel();
-    });
-
-    document.getElementById("max-level-btn").addEventListener("click", function () {
-        closeModal(maxLevelModal);
-        clearSavedProgress();
-        buildMainMenu();
-    });
-
-    timerRing.style.strokeDasharray = String(TIMER_CIRCUMFERENCE);
-    buildMainMenu();
-})();
-</script>
-</body>
-</html>
+        cl
