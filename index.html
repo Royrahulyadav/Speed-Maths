@@ -39,33 +39,23 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 16px 16px calc(var(--ad-height) + 16px);
+            padding: 16px;
             overflow: hidden;
         }
 
-        #ad-banner-zone {
+        #ad-banner-container {
             position: fixed;
             left: 0;
             right: 0;
             bottom: 0;
-            height: var(--ad-height);
-            min-height: var(--ad-height);
-            max-height: var(--ad-height);
-            background: rgba(0, 0, 0, 0.45);
-            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            height: 60px;
+            min-height: 60px;
             z-index: 1000;
             display: flex;
             align-items: center;
             justify-content: center;
+            background: transparent;
             pointer-events: auto;
-        }
-
-        #ad-banner-zone span {
-            font-size: 11px;
-            font-weight: 600;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            color: rgba(148, 163, 184, 0.5);
         }
 
         .app-shell {
@@ -75,6 +65,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            margin-bottom: 70px;
         }
 
         .game-arena {
@@ -282,9 +273,7 @@
 
 <div id="red-flash" aria-hidden="true"></div>
 
-<div id="ad-banner-zone" aria-label="Advertisement banner area">
-    <span>AdMob Banner · 60px</span>
-</div>
+<div id="ad-banner-container" aria-label="Advertisement banner"></div>
 
 <div class="app-shell">
     <div class="game-arena" id="arena">
@@ -356,7 +345,8 @@
             <div class="modal-icon">💔</div>
             <div class="modal-title">Level Failed</div>
             <div class="modal-desc" id="level-failed-desc">You ran out of time or lifelines.</div>
-            <button type="button" class="btn-action" id="level-failed-btn">Try Again</button>
+            <button type="button" class="btn-action" id="level-failed-watch-btn">Watch Ad to Continue</button>
+            <button type="button" class="btn-action secondary" id="level-failed-restart-btn">Restart Level</button>
         </div>
 
         <div id="max-level-modal" class="modal-overlay">
@@ -369,6 +359,7 @@
     </div>
 </div>
 
+<script src="gameLogic.js"></script>
 <script>
 (function () {
     "use strict";
@@ -410,10 +401,39 @@
     let inputLocked = false;
     let highestLevelReached = 1;
     let isPaused = false;
+    let lastFailReason = "lifelines";
 
     function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
     function pick(arr) { return arr[randInt(0, arr.length - 1)]; }
     function clamp(n, min, max) { return Math.max(min, Math.min(max, n)); }
+
+    function safeGameRun(label, fn) {
+        try {
+            return fn();
+        } catch (err) {
+            console.error("[Game Safety]", label, err);
+            stopTimer();
+            inputLocked = false;
+            return null;
+        }
+    }
+
+    function sanitizeGameState() {
+        if (typeof SpeedMathsProgress !== "undefined") {
+            highestLevelReached = clamp(
+                Math.max(highestLevelReached, SpeedMathsProgress.getHighestLevel()),
+                1, MAX_LEVEL
+            );
+        } else {
+            highestLevelReached = clamp(Math.floor(Number(highestLevelReached)) || 1, 1, MAX_LEVEL);
+        }
+        currentLevel = clamp(Math.floor(Number(currentLevel)) || 1, 1, MAX_LEVEL);
+        if (currentLevel > highestLevelReached) currentLevel = highestLevelReached;
+        correctInLevel = clamp(Math.floor(Number(correctInLevel)) || 0, 0, QUESTIONS_PER_LEVEL);
+        lifelines = clamp(Math.floor(Number(lifelines)) || 0, 0, LIFELINES_PER_LEVEL);
+        sessionScore = Math.max(0, Math.floor(Number(sessionScore)) || 0);
+        timerRemaining = clamp(Math.floor(Number(timerRemaining)) || 0, 0, QUESTION_TIME_SEC);
+    }
 
     function isBlockingModalOpen() {
         return levelCompleteModal.classList.contains("active") ||
@@ -431,6 +451,7 @@
     }
 
     function saveProgress() {
+        sanitizeGameState();
         try {
             localStorage.setItem(STORAGE_KEY, JSON.stringify({
                 level: currentLevel,
@@ -444,7 +465,7 @@
 
     function clearSavedProgress() {
         const stored = loadStorage();
-        highestLevelReached = stored && stored.highestLevelReached ? Math.max(1, stored.highestLevelReached) : highestLevelReached;
+        highestLevelReached = Math.max(highestLevelReached, SpeedMathsProgress.getHighestLevel());
         try {
             localStorage.setItem(STORAGE_KEY, JSON.stringify({
                 level: 1, correctInLevel: 0, lifelines: LIFELINES_PER_LEVEL,
@@ -487,6 +508,8 @@
     }
 
     function setTimerRing(remaining) {
+        remaining = clamp(Math.floor(Number(remaining)) || 0, 0, QUESTION_TIME_SEC);
+        timerRemaining = remaining;
         const ratio = remaining / QUESTION_TIME_SEC;
         timerRing.style.strokeDasharray = String(TIMER_CIRCUMFERENCE);
         timerRing.style.strokeDashoffset = String(TIMER_CIRCUMFERENCE * (1 - ratio));
@@ -504,16 +527,18 @@
         if (isPaused || isBlockingModalOpen()) return;
         stopTimer();
         timerInterval = setInterval(function () {
-            if (isPaused) return;
-            timerRemaining -= 1;
-            if (timerRemaining <= 0) {
-                timerRemaining = 0;
-                setTimerRing(0);
-                stopTimer();
-                onLevelFailed("time");
-                return;
-            }
-            setTimerRing(timerRemaining);
+            safeGameRun("timerTick", function () {
+                if (isPaused) return;
+                timerRemaining = Math.max(0, timerRemaining - 1);
+                if (timerRemaining <= 0) {
+                    timerRemaining = 0;
+                    setTimerRing(0);
+                    stopTimer();
+                    handleTimeOut();
+                    return;
+                }
+                setTimerRing(timerRemaining);
+            });
         }, 1000);
     }
 
@@ -579,92 +604,177 @@
         }
     }
 
-    function tierForLevel(level) {
-        if (level <= 10) return 1;
-        if (level <= 50) return 2;
-        if (level <= 200) return 3;
-        return 4;
-    }
-
-    function scaleWithinTier(level) {
-        const t = tierForLevel(level);
-        if (t === 1) return (level - 1) / 9;
-        if (t === 2) return (level - 11) / 39;
-        if (t === 3) return (level - 51) / 149;
-        return (level - 201) / 799;
-    }
-
     function generateQuestion(level) {
-        const tier = tierForLevel(level);
-        const progress = scaleWithinTier(level);
+        const lvl = clamp(level, 1, MAX_LEVEL);
+        const t = (lvl - 1) / (MAX_LEVEL - 1);
 
-        if (tier === 1) {
-            const a = randInt(1, 10), b = randInt(1, 10);
-            const op = Math.random() < 0.5 ? "+" : "-";
-            if (op === "-" && a < b) return generateQuestion(level);
-            return { text: a + " " + op + " " + b, answer: op === "+" ? a + b : a - b };
+        function getLimits(simple) {
+            let opMax;
+            if (lvl === 1) {
+                opMax = 10;
+            } else if (lvl <= 10) {
+                opMax = Math.round(10 + (lvl - 1) * (40 / 9));
+            } else if (lvl <= 50) {
+                opMax = Math.round(50 + (lvl - 11) * (49 / 39));
+            } else if (lvl <= 100) {
+                opMax = 99;
+            } else {
+                opMax = Math.round(99 + (lvl - 100) * (900 / 900));
+            }
+            opMax = clamp(opMax, 1, 999);
+            if (lvl < 100) opMax = Math.min(opMax, 99);
+            if (simple) opMax = Math.min(opMax, lvl <= 10 ? 10 : 20);
+
+            const ansMax = lvl <= 300
+                ? 100
+                : clamp(Math.round(100 + (lvl - 300) * (899 / 700)), 100, 999);
+
+            let mulCap;
+            if (lvl <= 10) mulCap = clamp(4 + lvl, 5, 9);
+            else if (lvl <= 50) mulCap = clamp(9 + Math.floor((lvl - 10) / 5), 9, 12);
+            else if (lvl < 100) mulCap = 15;
+            else mulCap = clamp(12 + Math.floor((lvl - 100) / 40), 12, 99);
+            if (lvl < 100) mulCap = Math.min(mulCap, 99);
+
+            let divCap;
+            if (lvl <= 10) divCap = 9;
+            else if (lvl <= 50) divCap = 12;
+            else if (lvl < 100) divCap = 15;
+            else divCap = clamp(12 + Math.floor((lvl - 100) / 35), 12, 99);
+            if (lvl < 100) divCap = Math.min(divCap, 99);
+
+            return { opMax, ansMax, mulCap, divCap, mixSizes: lvl >= 11 && lvl <= 50 };
         }
 
-        if (tier === 2) {
-            if (Math.random() < 0.55) {
-                const a = randInt(10, 99), b = randInt(10, 99);
-                const op = Math.random() < 0.5 ? "+" : "-";
-                if (op === "-" && a < b) return generateQuestion(level);
-                return { text: a + " " + op + " " + b, answer: op === "+" ? a + b : a - b };
+        function pickOperands(maxVal, mixSizes) {
+            if (!mixSizes || maxVal <= 10) {
+                const a = randInt(1, maxVal);
+                const b = randInt(1, maxVal);
+                return [a, b];
             }
-            const a = randInt(2, 9), b = randInt(2, 9);
+            if (Math.random() < 0.55) {
+                const small = randInt(1, 9);
+                const big = randInt(clamp(10, 1, maxVal), maxVal);
+                return Math.random() < 0.5 ? [small, big] : [big, small];
+            }
+            return [randInt(1, maxVal), randInt(1, maxVal)];
+        }
+
+        function pickOperation() {
+            const bounce = 0.05 + Math.random() * 0.05;
+            if (Math.random() < bounce) {
+                return { type: Math.random() < 0.5 ? "add" : "subtract", simple: true };
+            }
+
+            const wBodmas = lvl < 15 ? 0 : clamp(((lvl - 15) / (MAX_LEVEL - 15)) * 0.30, 0, 0.30);
+            const wMulDiv = clamp(0.15 + t * 0.40, 0.15, 0.55);
+            const wMul = wMulDiv * 0.5;
+            const wDiv = wMulDiv * 0.5;
+            const wAdd = Math.max(0.08, (1 - wBodmas - wMulDiv) * 0.5);
+            const wSub = Math.max(0.08, (1 - wBodmas - wMulDiv) * 0.5);
+
+            const types = ["add", "subtract", "multiply", "divide", "bodmas"];
+            const weights = [wAdd, wSub, wMul, wDiv, wBodmas];
+            const total = weights.reduce(function (s, w) { return s + w; }, 0);
+            let roll = Math.random() * total;
+            for (let i = 0; i < types.length; i++) {
+                roll -= weights[i];
+                if (roll <= 0) return { type: types[i], simple: false };
+            }
+            return { type: "add", simple: false };
+        }
+
+        function isValid(q, limits) {
+            if (!q || !Number.isFinite(q.answer) || q.answer < 0 || q.answer > limits.ansMax) return false;
+            if (lvl < 100) {
+                const nums = q.text.match(/\d+/g);
+                if (nums) {
+                    for (let i = 0; i < nums.length; i++) {
+                        const n = parseInt(nums[i], 10);
+                        if (n < 1 || n > 99) return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        function makeAdd(limits) {
+            const pair = pickOperands(limits.opMax, limits.mixSizes);
+            const a = pair[0];
+            const b = pair[1];
+            return { text: a + " + " + b, answer: a + b };
+        }
+
+        function makeSubtract(limits) {
+            let pair = pickOperands(limits.opMax, limits.mixSizes);
+            let a = pair[0];
+            let b = pair[1];
+            if (a < b) { const tmp = a; a = b; b = tmp; }
+            if (a === b && a > 1) b -= 1;
+            return { text: a + " − " + b, answer: a - b };
+        }
+
+        function makeMultiply(limits) {
+            const cap = limits.mulCap;
+            const a = randInt(2, cap);
+            const b = randInt(2, cap);
             return { text: a + " × " + b, answer: a * b };
         }
 
-        if (tier === 3) {
-            const roll = Math.random();
-            if (roll < 0.35) {
-                const a = randInt(12, 99), b = randInt(2, 12);
-                if (a % b !== 0) return generateQuestion(level);
-                return { text: a + " ÷ " + b, answer: a / b };
-            }
-            if (roll < 0.7) {
-                const a = randInt(2, 12), b = randInt(2, 12), c = randInt(5, 40);
-                return { text: a + " × " + b + " + " + c, answer: a * b + c };
-            }
-            const a = randInt(20, 99), b = randInt(10, 50);
-            const op = Math.random() < 0.5 ? "+" : "-";
-            if (op === "-" && a < b) return generateQuestion(level);
-            return { text: a + " " + op + " " + b, answer: op === "+" ? a + b : a - b };
+        function makeDivide(limits) {
+            const divisor = randInt(2, limits.divCap);
+            const maxQuotient = clamp(Math.floor(limits.ansMax), 2, 99);
+            const quotient = randInt(2, Math.min(maxQuotient, Math.floor(limits.opMax / divisor)));
+            const dividend = divisor * quotient;
+            if (lvl < 100 && dividend > 99) return null;
+            return { text: dividend + " ÷ " + divisor, answer: quotient };
         }
 
-        const maxBase = Math.floor(100 + progress * 899);
-        const maxNum = clamp(maxBase + randInt(0, 50), 100, 999);
-        const complexity = clamp(Math.floor(2 + progress * 4), 2, 6);
-        const ops = ["+", "-", "×", "÷"];
+        function makeBodmas(limits) {
+            const variant = pick(["mul_add", "mul_sub", "add_mul"]);
+            const xyMax = clamp(Math.min(limits.mulCap, 12), 2, limits.mulCap);
 
-        function rVal() { return randInt(2, maxNum); }
+            if (variant === "mul_add") {
+                const x = randInt(2, xyMax);
+                const y = randInt(2, xyMax);
+                const zHi = clamp(limits.opMax, 1, Math.max(1, limits.ansMax - x * y));
+                const z = randInt(1, zHi);
+                return { text: x + " × " + y + " + " + z, answer: x * y + z };
+            }
 
-        if (complexity <= 3 || Math.random() < 0.4) {
-            const a = rVal(), b = rVal(), op = pick(ops);
-            if (op === "÷") {
-                const divisor = randInt(2, Math.min(25, Math.max(3, Math.floor(maxNum / 10))));
-                const quotient = randInt(2, Math.min(99, Math.floor(maxNum / divisor)));
-                const dividend = divisor * quotient;
-                return { text: dividend + " ÷ " + divisor, answer: quotient };
+            if (variant === "mul_sub") {
+                const x = randInt(2, xyMax);
+                const y = randInt(2, xyMax);
+                const inner = x * y;
+                if (inner < 2) return null;
+                const z = randInt(1, inner - 1);
+                return { text: x + " × " + y + " − " + z, answer: inner - z };
             }
-            if (op === "×") {
-                const x = randInt(2, Math.min(25, 12 + Math.floor(progress * 20)));
-                const y = randInt(2, Math.min(25, 12 + Math.floor(progress * 20)));
-                return { text: x + " × " + y, answer: x * y };
-            }
-            if (op === "-" && a < b) return generateQuestion(level);
-            return { text: a + " " + op + " " + b, answer: op === "+" ? a + b : a - b };
+
+            const b = randInt(2, xyMax);
+            const c = randInt(2, xyMax);
+            const product = b * c;
+            const aMax = clamp(limits.opMax, 1, Math.max(1, limits.ansMax - product));
+            const a = randInt(1, aMax);
+            return { text: a + " + " + b + " × " + c, answer: a + product };
         }
 
-        const x = randInt(2, Math.min(20, 5 + Math.floor(progress * 15)));
-        const y = randInt(2, Math.min(20, 5 + Math.floor(progress * 15)));
-        const inner = x * y;
-        const z = randInt(5, Math.min(maxNum, 80 + Math.floor(progress * 200)));
-        const useAdd = Math.random() < 0.5;
-        const answer = useAdd ? inner + z : inner - z;
-        if (answer < 0) return generateQuestion(level);
-        return { text: x + " × " + y + (useAdd ? " + " : " − ") + z, answer: answer };
+        const chosen = pickOperation();
+        const limits = getLimits(chosen.simple);
+
+        for (let attempt = 0; attempt < 48; attempt++) {
+            let q = null;
+            switch (chosen.type) {
+                case "add": q = makeAdd(limits); break;
+                case "subtract": q = makeSubtract(limits); break;
+                case "multiply": q = makeMultiply(limits); break;
+                case "divide": q = makeDivide(limits); break;
+                case "bodmas": q = makeBodmas(limits); break;
+            }
+            if (isValid(q, limits)) return q;
+        }
+
+        return { text: "4 + 3", answer: 7 };
     }
 
     function mapOptions(correct) {
@@ -686,8 +796,11 @@
 
     function loadNextQuestion() {
         if (isPaused) return;
+        sanitizeGameState();
         inputLocked = false;
-        const q = generateQuestion(currentLevel);
+        const q = safeGameRun("generateQuestion", function () {
+            return generateQuestion(currentLevel);
+        }) || { text: "4 + 3", answer: 7 };
         rightAnswer = q.answer;
         equationEl.textContent = q.text;
         mapOptions(rightAnswer);
@@ -702,15 +815,66 @@
         updatePauseButtonState();
     }
 
+    function updateLevelFailedButtons() {
+        const watchBtn = document.getElementById("level-failed-watch-btn");
+        if (!watchBtn) return;
+        watchBtn.hidden = false;
+        watchBtn.disabled = false;
+    }
+
+    function resumeAfterRewardedAd() {
+        closeModal(levelFailedModal);
+        lifelines = 1;
+        updateHeartsUI();
+        inputLocked = false;
+        optionButtons.forEach(function (btn) {
+            btn.classList.remove("state-correct", "state-wrong", "locked");
+        });
+        isPaused = false;
+        timerRing.classList.remove("frozen");
+
+        loadNextQuestion();
+
+        saveProgress();
+        updatePauseButtonState();
+    }
+
+    function handleTimeOut() {
+        if (inputLocked || isPaused || isBlockingModalOpen()) return;
+        lockOptions();
+        flashRed();
+        lifelines -= 1;
+        updateHeartsUI();
+        saveProgress();
+        lastFailReason = "time";
+        setTimeout(function () {
+            optionButtons.forEach(function (btn) {
+                btn.classList.remove("state-correct", "state-wrong", "locked");
+            });
+            if (lifelines <= 0) {
+                onLevelFailed("time");
+            } else {
+                inputLocked = false;
+                loadNextQuestion();
+            }
+        }, 220);
+    }
+
+    function restartCurrentLevel() {
+        closeModal(levelFailedModal);
+        correctInLevel = 0;
+        beginLevel(currentLevel, false);
+    }
+
     function onLevelFailed(reason) {
         if (levelFailedModal.classList.contains("active")) return;
         isPaused = false;
         closeModal(pauseModal);
         lockOptions();
         stopTimer();
-        levelFailedDesc.textContent = reason === "time"
-            ? "The 15-second clock hit zero on Level " + currentLevel + ". Retry this exact stage from Question 1."
-            : "Both lifelines are gone on Level " + currentLevel + ". Retry this exact stage from Question 1.";
+        lastFailReason = reason;
+        levelFailedDesc.textContent = "You ran out of lifelines on Level " + currentLevel + ". Watch an ad for one lifeline, or restart from Question 1.";
+        updateLevelFailedButtons();
         openModal(levelFailedModal);
         saveProgress();
         updatePauseButtonState();
@@ -722,14 +886,21 @@
         stopTimer();
         lockOptions();
         if (currentLevel >= MAX_LEVEL) {
-            highestLevelReached = MAX_LEVEL;
+            highestLevelReached = SpeedMathsProgress.updateHighestLevel(MAX_LEVEL);
+            SpeedMathsProgress.refreshMenuHighestLevel();
             saveProgress();
             openModal(maxLevelModal);
             updatePauseButtonState();
             return;
         }
-        highestLevelReached = Math.max(highestLevelReached, currentLevel + 1);
-        levelCompleteDesc.textContent = "Perfect run! Level " + currentLevel + " cleared. Level " + (currentLevel + 1) + " is now unlocked.";
+        const completedLevel = currentLevel;
+        currentLevel += 1;
+        correctInLevel = 0;
+        lifelines = LIFELINES_PER_LEVEL;
+        highestLevelReached = SpeedMathsProgress.updateHighestLevel(currentLevel);
+        levelCompleteDesc.textContent = SpeedMathsProgress.getLevelCompleteMessage(completedLevel, currentLevel);
+        SpeedMathsProgress.refreshMenuHighestLevel();
+        updateHud();
         openModal(levelCompleteModal);
         saveProgress();
         updatePauseButtonState();
@@ -759,21 +930,28 @@
         lifelines -= 1;
         updateHeartsUI();
         saveProgress();
+        lastFailReason = "lifelines";
         setTimeout(function () {
             btn.classList.remove("state-wrong");
             if (lifelines <= 0) onLevelFailed("lifelines");
-            else loadNextQuestion();
+            else {
+                inputLocked = false;
+                loadNextQuestion();
+            }
         }, 220);
     }
 
     function handleAnswer(btn) {
         if (isPaused || inputLocked || isBlockingModalOpen()) return;
-        const chosen = parseInt(btn.textContent, 10);
-        if (chosen === rightAnswer) handleCorrect(btn);
-        else handleWrong(btn);
+        safeGameRun("handleAnswer", function () {
+            const chosen = parseInt(btn.textContent, 10);
+            if (chosen === rightAnswer) handleCorrect(btn);
+            else handleWrong(btn);
+        });
     }
 
     function beginLevel(level, resetProgress) {
+        sanitizeGameState();
         closeAllModals();
         isPaused = false;
         currentLevel = clamp(level, 1, MAX_LEVEL);
@@ -790,8 +968,12 @@
         isPaused = false;
         stopTimer();
         const data = loadStorage();
-        highestLevelReached = data && data.highestLevelReached ? Math.max(1, data.highestLevelReached) : 1;
-        menuHighest.textContent = String(highestLevelReached);
+        highestLevelReached = Math.max(
+            data && data.highestLevelReached ? Math.max(1, data.highestLevelReached) : 1,
+            SpeedMathsProgress.getHighestLevel()
+        );
+        sanitizeGameState();
+        SpeedMathsProgress.refreshMenuHighestLevel();
         menuButtons.innerHTML = "";
 
         const savedLevel = data && data.level ? clamp(data.level, 1, MAX_LEVEL) : 1;
@@ -837,7 +1019,10 @@
     }
 
     optionButtons.forEach(function (btn) {
-        btn.addEventListener("click", function () { handleAnswer(btn); });
+        btn.addEventListener("click", function () {
+            if (inputLocked || isPaused || isBlockingModalOpen()) return;
+            handleAnswer(btn);
+        });
     });
 
     pauseBtn.addEventListener("click", pauseGame);
@@ -846,17 +1031,24 @@
 
     document.getElementById("level-complete-btn").addEventListener("click", function () {
         closeModal(levelCompleteModal);
-        currentLevel += 1;
-        correctInLevel = 0;
-        lifelines = LIFELINES_PER_LEVEL;
         beginLevel(currentLevel, true);
     });
 
-    document.getElementById("level-failed-btn").addEventListener("click", function () {
-        closeModal(levelFailedModal);
-        correctInLevel = 0;
-        lifelines = LIFELINES_PER_LEVEL;
-        beginLevel(currentLevel, true);
+    document.getElementById("level-failed-watch-btn").addEventListener("click", function () {
+        const watchBtn = document.getElementById("level-failed-watch-btn");
+        watchBtn.disabled = true;
+        SpeedMathsAdMob.showRewardedAd(
+            function () {
+                resumeAfterRewardedAd();
+            },
+            function () {
+                updateLevelFailedButtons();
+            }
+        );
+    });
+
+    document.getElementById("level-failed-restart-btn").addEventListener("click", function () {
+        restartCurrentLevel();
     });
 
     document.getElementById("max-level-btn").addEventListener("click", function () {
