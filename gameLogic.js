@@ -876,57 +876,62 @@
     // Navigation and Hardware Back Button interceptor
     const exitConfirmModal = document.getElementById("exit-confirm-modal");
 
+    // Push multiple buffer states so back button never runs out
+    function pushBufferStates(n) {
+        try {
+            for (var i = 0; i < n; i++) {
+                history.pushState({ page: "buffer" }, "");
+            }
+        } catch(e) {}
+    }
+
     function showExitConfirmationModal() {
         openModal(exitConfirmModal);
-        try {
-            history.pushState({ page: "exit_confirm" }, "");
-        } catch (e) {}
+        pushBufferStates(3); // replenish buffer inside modal too
     }
 
     document.getElementById("exit-no-btn").addEventListener("click", function() {
         closeModal(exitConfirmModal);
-        try {
-            history.pushState({ page: "menu" }, "");
-        } catch(e) {}
+        pushBufferStates(5); // replenish buffer after cancel
     });
 
     document.getElementById("exit-yes-btn").addEventListener("click", function() {
         closeModal(exitConfirmModal);
         try {
-            // Goes back twice to pop our states and trigger native back dialog
-            history.go(-2);
+            // Go back far enough to exhaust all our buffer states
+            // and let the native WebView close the app
+            history.go(-20);
         } catch(e) {}
     });
 
     window.addEventListener("popstate", function (event) {
+        // Always replenish buffer immediately so rapid double-taps are caught
+        pushBufferStates(3);
+
         if (exitConfirmModal.classList.contains("active")) {
             closeModal(exitConfirmModal);
-            try {
-                history.pushState({ page: "menu" }, "");
-            } catch(e) {}
             return;
         }
 
         if (gameScreen.classList.contains("active")) {
-            // Inside game play: Back button pauses or resumes the game
-            if (!isPaused && !isBlockingModalOpen()) {
+            // Inside gameplay: Back button = Pause / Resume
+            if (isBlockingModalOpen()) {
+                // close any open blocking modal (level complete, failed etc)
+                closeAllModals();
+                isPaused = false;
+            } else if (!isPaused) {
                 pauseGame();
             } else if (isPaused) {
                 resumeGame();
             }
-            try {
-                history.pushState({ page: "game" }, "");
-            } catch(e) {}
         } else {
-            // In main menu: Back button opens our custom Exit Confirmation Dialog
+            // In main menu: Back button = show Exit Confirmation
             showExitConfirmationModal();
         }
     });
 
-    // Push initial history state for back button navigation
-    try {
-        history.pushState({ page: "menu" }, "");
-    } catch(e) {}
+    // Push 5 buffer states on startup to prevent immediate WebIntoApp ad
+    pushBufferStates(5);
 
     // Startup configuration
     timerRing.style.strokeDasharray = String(TIMER_CIRCUMFERENCE);
